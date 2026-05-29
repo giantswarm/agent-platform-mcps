@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-05-29
+
 - added: abstract, vendor-neutral input — `mcpServers` entries use `cluster` / `group` / `url` and
   a single `auth.mode` (`none` | `oauth` | `forward` | `exchange`); the chart owns translation to
   each CRD. Token-exchange / IdP config is factored into a reusable `identityProviders` map
@@ -27,4 +29,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   agentgateway deployer, not this chart — it emits no resource that references a `Gateway`.
 - changed: `app.giantswarm.io` label group was changed to `application.giantswarm.io`
 
-[Unreleased]: https://github.com/giantswarm/agentic-platform-mcps/tree/main
+[Unreleased]: https://github.com/giantswarm/agentic-platform-mcps/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/giantswarm/agentic-platform-mcps/releases/tag/v0.1.0
