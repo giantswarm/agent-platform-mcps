@@ -2,28 +2,20 @@
 # for details and background.
 
 apiVersion: v2
-
 # Version of the packaged app
 appVersion: 0.0.1
-
 # Make sure your name DOES NOT end in "app" or "-app".
 name: agentic-platform-mcps
-
 # Please describe what the app provides in a sentence or two.
 description: Chart to deploy MCPs for GiantSwarm Agentic Platform.
-
 # URL of the GitHub repository that is the source of this Chart.yaml file.
 home: https://github.com/giantswarm/agentic-platform-mcps
-
 # If you have an icon/logo, you should add it to https://github.com/giantswarm/web-assets
 # and set the final URL here.
 icon: https://s.giantswarm.io/app-icons/giantswarm/1/light.svg
-
 sources:
-- https://github.com/giantswarm/agentic-platform-mcps
-
-version: 0.0.0-dev
-
+  - https://github.com/giantswarm/agentic-platform-mcps
+version: 0.1.0
 annotations:
   # Adapt to 'giantswarm' if this application is not to be deployed by customers
   io.giantswarm.application.audience: giantswarm
