@@ -27,9 +27,23 @@ muster:
 # validation are owned by whoever deploys the agentgateway, NOT by this chart.
 agentgateway:
   enabled: false
+  # Front muster instead of connecting to each server directly. When true, the
+  # AgentgatewayBackend gets a SINGLE target pointing at muster's aggregator MCP
+  # endpoint, so traffic flows client -> agentgateway -> muster -> servers.
+  # muster keeps doing per-server connection + auth + RFC 8693 exchange, and
+  # agentgateway becomes the single MCP choke point for observability (metrics /
+  # traces / access logs of every tool call). The per-target exchange policies
+  # and the tokenExchange broker below are NOT used in this mode. Requires
+  # muster.enabled: true.
+  viaMuster: false
+  # muster aggregator MCP endpoint. Required when viaMuster: true; ignored
+  # otherwise. This is muster's in-cluster aggregator Service (the chart that
+  # deploys muster names it "<release>-muster"), e.g.
+  #   http://agentic-platform-muster.agentic-platform.svc.cluster.local:8090/mcp
+  musterUrl: ""
   # Outbound cross-cluster auth (mode: exchange) is delegated to a muster broker
   # called as an Envoy-style ext_authz service. One per-target policy is rendered
-  # for each server with auth.mode=exchange.
+  # for each server with auth.mode=exchange. (Unused when viaMuster: true.)
   tokenExchange:
     broker:
       kind: Service  # Service | Backend

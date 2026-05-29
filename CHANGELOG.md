@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `agentgateway.viaMuster` — front muster instead of connecting to each server directly. When
+  enabled, the `AgentgatewayBackend` renders a single target pointing at muster's aggregator MCP
+  endpoint (`agentgateway.musterUrl`), so traffic flows `client → agentgateway → muster → servers`.
+  agentgateway becomes the single MCP choke point for observability while muster keeps doing
+  per-server connection + auth + RFC 8693 exchange. The verified inbound token is forwarded to
+  muster via `auth.passthrough`; the per-target exchange policies and the `tokenExchange` broker
+  are not rendered in this mode. Requires `muster.enabled: true`.
+
 ## [0.1.0] - 2026-05-29
 
 ### Added
