@@ -1,26 +1,7 @@
 {
-    "$schema": "http://json-schema.org/schema#",
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
     "type": "object",
     "properties": {
-        "muster": {
-            "type": "object",
-            "properties": {
-                "enabled": {
-                    "type": "boolean"
-                },
-                "families": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "object",
-                        "properties": {
-                            "instanceArg": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            }
-        },
         "agentgateway": {
             "type": "object",
             "properties": {
@@ -46,120 +27,83 @@
                                     "type": "integer"
                                 },
                                 "protocol": {
-                                    "type": "string",
-                                    "enum": ["grpc", "http"]
+                                    "type": "string"
                                 }
-                            }
+                            },
+                            "additionalProperties": false
                         }
-                    }
+                    },
+                    "additionalProperties": false
                 }
-            }
+            },
+            "additionalProperties": false
         },
         "defaults": {
             "type": "object",
             "properties": {
-                "autoStart": {
-                    "type": "boolean"
-                },
-                "transport": {
-                    "type": "string"
-                },
                 "audiences": {
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
+                },
+                "autoStart": {
+                    "type": "boolean"
+                },
+                "transport": {
+                    "type": "string"
                 }
-            }
+            },
+            "additionalProperties": false
+        },
+        "global": {
+            "description": "Global values shared between all subcharts",
+            "$comment": "Added automatically by 'helm schema' to allow this chart to be used as a Helm dependency, as the `additionalProperties` setting would otherwise collide with Helm's special 'global' values key.",
+            "type": [
+                "object",
+                "null"
+            ]
         },
         "identityProviders": {
             "type": "object",
-            "additionalProperties": {
-                "type": "object",
-                "required": ["tokenEndpoint"],
-                "properties": {
-                    "tokenEndpoint": {
-                        "type": "string"
-                    },
-                    "connectorId": {
-                        "type": "string"
-                    },
-                    "scopes": {
-                        "type": "string"
-                    },
-                    "credentialsSecret": {
-                        "type": "object",
-                        "properties": {
-                            "name": {
-                                "type": "string"
-                            },
-                            "namespace": {
-                                "type": "string"
-                            },
-                            "clientIdKey": {
-                                "type": "string"
-                            },
-                            "clientSecretKey": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            }
+            "additionalProperties": false
         },
         "mcpServers": {
-            "type": "array",
-            "items": {
-                "type": "object",
-                "required": ["cluster", "group", "url"],
-                "properties": {
-                    "name": {
-                        "type": "string"
-                    },
-                    "cluster": {
-                        "type": "string"
-                    },
-                    "group": {
-                        "type": "string"
-                    },
-                    "namespace": {
-                        "type": "string"
-                    },
-                    "url": {
-                        "type": "string"
-                    },
-                    "transport": {
-                        "type": "string"
-                    },
-                    "autoStart": {
-                        "type": "boolean"
-                    },
-                    "timeout": {
-                        "type": "integer"
-                    },
-                    "toolPrefix": {
-                        "type": "string"
-                    },
-                    "auth": {
-                        "type": "object",
-                        "properties": {
-                            "mode": {
-                                "type": "string",
-                                "enum": ["none", "oauth", "forward", "exchange"]
-                            },
-                            "provider": {
-                                "type": "string"
-                            },
-                            "audiences": {
-                                "type": "array",
-                                "items": {
+            "type": "array"
+        },
+        "muster": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "families": {
+                    "type": "object",
+                    "properties": {
+                        "kubernetes": {
+                            "type": "object",
+                            "properties": {
+                                "instanceArg": {
                                     "type": "string"
                                 }
-                            }
+                            },
+                            "additionalProperties": false
+                        },
+                        "prometheus": {
+                            "type": "object",
+                            "properties": {
+                                "instanceArg": {
+                                    "type": "string"
+                                }
+                            },
+                            "additionalProperties": false
                         }
-                    }
+                    },
+                    "additionalProperties": false
                 }
-            }
+            },
+            "additionalProperties": false
         }
-    }
+    },
+    "additionalProperties": false
 }

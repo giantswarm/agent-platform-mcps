@@ -32,11 +32,11 @@ agentgateway:
   # for each server with auth.mode=exchange.
   tokenExchange:
     broker:
-      kind: Service # Service | Backend
+      kind: Service  # Service | Backend
       name: muster-token-exchange-broker
       namespace: muster
       port: 8080
-      protocol: grpc # grpc | http
+      protocol: grpc  # grpc | http
 
 # Defaults applied to every mcpServers entry unless the entry overrides them.
 defaults:
