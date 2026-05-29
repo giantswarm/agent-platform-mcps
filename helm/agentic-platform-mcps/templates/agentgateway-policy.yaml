@@ -1,0 +1,57 @@
+{{- if .Values.agentgateway.enabled }}
+{{- $root := . }}
+{{- $broker := .Values.agentgateway.tokenExchange.broker }}
+{{- /*
+Outbound cross-cluster token exchange — one policy PER token-exchange target. Each
+attaches to the AgentgatewayBackend via `sectionName` (the only way to target a single
+MCP target) and delegates to the muster broker. `contextExtensions` tells the broker
+which cluster's Dex to exchange against, so multiplexed remote targets each get a token
+valid for THEIR cluster.
+
+Inbound caller (JWT) validation is intentionally NOT rendered here — it is a gateway-level
+concern owned by whoever deploys the agentgateway.
+*/}}
+{{- range .Values.mcpServers }}
+{{- if eq ((.auth | default dict).mode | default "none") "exchange" }}
+{{- $p := include "mcp.provider" (dict "root" $root "server" .) | fromYaml }}
+---
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayPolicy
+metadata:
+  name: {{ include "mcp.serverName" . }}-exchange
+  namespace: {{ $root.Release.Namespace }}
+  labels:
+    {{- include "labels.common" $root | nindent 4 }}
+spec:
+  targetRefs:
+    - group: agentgateway.dev
+      kind: AgentgatewayBackend
+      name: {{ include "name" $root }}
+      sectionName: {{ include "mcp.serverName" . }}
+  backend:
+    extAuth:
+      backendRef:
+        kind: {{ $broker.kind }}
+        name: {{ $broker.name | quote }}
+        namespace: {{ $broker.namespace | quote }}
+        port: {{ $broker.port }}
+      {{- if eq $broker.protocol "http" }}
+      http: {}
+      {{- else }}
+      grpc:
+        contextExtensions:
+          cluster: {{ .cluster | quote }}
+          dexTokenEndpoint: {{ $p.tokenEndpoint | quote }}
+          {{- with $p.connectorId }}
+          connectorId: {{ . | quote }}
+          {{- end }}
+          {{- with $p.scopes }}
+          scopes: {{ . | quote }}
+          {{- end }}
+          {{- with $p.credentialsSecret }}
+          clientCredentialsSecret: {{ .name | quote }}
+          {{- end }}
+      {{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

@@ -1,0 +1,37 @@
+{{- if .Values.agentgateway.enabled }}
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayBackend
+metadata:
+  name: {{ include "name" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "labels.common" . | nindent 4 }}
+spec:
+  # One multiplexed MCP backend federating every server behind a single endpoint
+  # (mirrors muster's aggregation role; avoids one /mcp route per server).
+  mcp:
+    targets:
+      {{- range .Values.mcpServers }}
+      - name: {{ include "mcp.serverName" . }}
+        static:
+          host: {{ include "mcp.host" .url | quote }}
+          port: {{ include "mcp.port" .url }}
+          path: {{ include "mcp.path" .url | quote }}
+          protocol: StreamableHTTP
+          {{- $tls := hasPrefix "https://" .url }}
+          {{- $passthrough := eq ((.auth | default dict).mode | default "none") "forward" }}
+          {{- if or $tls $passthrough }}
+          policies:
+            {{- if $tls }}
+            # https upstream (e.g. a remote cluster's public MCP route) -> initiate
+            # TLS to the backend (system trusted CAs, SNI derived from host).
+            tls: {}
+            {{- end }}
+            {{- if $passthrough }}
+            # auth.mode=forward -> forward the verified inbound token upstream.
+            auth:
+              passthrough: {}
+            {{- end }}
+          {{- end }}
+      {{- end }}
+{{- end }}

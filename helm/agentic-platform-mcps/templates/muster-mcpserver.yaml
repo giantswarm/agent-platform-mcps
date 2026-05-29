@@ -1,0 +1,77 @@
+{{- if .Values.muster.enabled }}
+{{- $root := . }}
+{{- range .Values.mcpServers }}
+{{- $auth := .auth | default dict }}
+{{- $mode := $auth.mode | default "none" }}
+{{- /* Default audiences apply to token-propagating modes; others only if explicit. */}}
+{{- $audiences := $auth.audiences }}
+{{- if and (not $audiences) (or (eq $mode "forward") (eq $mode "exchange")) }}
+{{- $audiences = $root.Values.defaults.audiences }}
+{{- end }}
+---
+apiVersion: muster.giantswarm.io/v1alpha1
+kind: MCPServer
+metadata:
+  name: {{ include "mcp.serverName" . }}
+  namespace: {{ .namespace | default $root.Release.Namespace }}
+  labels:
+    {{- include "labels.common" $root | nindent 4 }}
+    muster.giantswarm.io/management-cluster: {{ .cluster }}
+    muster.giantswarm.io/type: mcp-{{ .group }}
+spec:
+  autoStart: {{ if hasKey . "autoStart" }}{{ .autoStart }}{{ else }}{{ $root.Values.defaults.autoStart }}{{ end }}
+  type: {{ .transport | default $root.Values.defaults.transport }}
+  url: {{ .url }}
+  {{- with .timeout }}
+  timeout: {{ . }}
+  {{- end }}
+  {{- with .toolPrefix }}
+  toolPrefix: {{ . }}
+  {{- end }}
+  auth:
+    {{- if eq $mode "none" }}
+    type: none
+    forwardToken: false
+    {{- else if eq $mode "oauth" }}
+    type: oauth
+    forwardToken: false
+    {{- else if eq $mode "forward" }}
+    type: oauth
+    forwardToken: true
+    {{- else if eq $mode "exchange" }}
+    {{- $p := include "mcp.provider" (dict "root" $root "server" .) | fromYaml }}
+    type: oauth
+    forwardToken: false
+    tokenExchange:
+      enabled: true
+      dexTokenEndpoint: {{ $p.tokenEndpoint }}
+      {{- with $p.connectorId }}
+      connectorId: {{ . }}
+      {{- end }}
+      {{- with $p.scopes }}
+      scopes: {{ . }}
+      {{- end }}
+      {{- with $p.credentialsSecret }}
+      clientCredentialsSecretRef:
+        name: {{ .name }}
+        namespace: {{ .namespace | default $root.Release.Namespace }}
+        clientIdKey: {{ .clientIdKey }}
+        clientSecretKey: {{ .clientSecretKey }}
+      {{- end }}
+    {{- else }}
+    {{- fail (printf "mcpServers entry %q: unknown auth.mode %q (want none|oauth|forward|exchange)" (include "mcp.serverName" .) $mode) }}
+    {{- end }}
+    {{- with $audiences }}
+    requiredAudiences:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+  {{- if hasKey $root.Values.muster.families .group }}
+  {{- $fam := index $root.Values.muster.families .group }}
+  family:
+    name: {{ .group }}
+    {{- with $fam.instanceArg }}
+    instanceArg: {{ . }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+{{- end }}

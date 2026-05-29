@@ -1,0 +1,79 @@
+# Values for the agentic-platform-mcps chart.
+#
+# This chart renders a single, vendor-neutral list of MCP servers (`mcpServers`)
+# into the CR family selected by the toggles below:
+#
+#   * muster        -> muster.giantswarm.io/v1alpha1 MCPServer (default on)
+#   * agentgateway  -> agentgateway.dev/v1alpha1 AgentgatewayBackend + per-target
+#                      AgentgatewayPolicy (default off; migration target)
+#
+# The input is abstract: it does NOT mirror any one CRD. The chart owns the
+# translation into each backend's CRD. The CRDs themselves are NOT shipped here.
+
+# Render muster MCPServer CRs.
+muster:
+  enabled: true
+  # Groups that muster exposes as instance families (the same logical server
+  # aggregated across many clusters). A server whose `group` is listed here gets
+  # a muster `family` block; groups not listed are rendered as singletons.
+  families:
+    kubernetes:
+      instanceArg: management_cluster
+    prometheus:
+      instanceArg: management_cluster
+
+# Render agentgateway configuration CRs (AgentgatewayBackend + per-target
+# AgentgatewayPolicy). The Gateway, HTTPRoute (routing) and inbound caller (JWT)
+# validation are owned by whoever deploys the agentgateway, NOT by this chart.
+agentgateway:
+  enabled: false
+  # Outbound cross-cluster auth (mode: exchange) is delegated to a muster broker
+  # called as an Envoy-style ext_authz service. One per-target policy is rendered
+  # for each server with auth.mode=exchange.
+  tokenExchange:
+    broker:
+      kind: Service # Service | Backend
+      name: muster-token-exchange-broker
+      namespace: muster
+      port: 8080
+      protocol: grpc # grpc | http
+
+# Defaults applied to every mcpServers entry unless the entry overrides them.
+defaults:
+  autoStart: true
+  transport: streamable-http
+  # Audiences required at the upstream for oauth-authenticated servers.
+  audiences:
+    - dex-k8s-authenticator
+
+# Identity providers, defined once and referenced by servers via auth.provider.
+# Multiple MCP servers sharing a cluster's Dex reference the same entry instead
+# of repeating the token-exchange config.
+#
+# Example:
+#   cluster-b:
+#     tokenEndpoint: https://dex.cluster-b.example.com/token
+#     connectorId: giantswarm-simple-oidc
+#     scopes: openid profile email groups
+#     credentialsSecret:
+#       name: cluster-b-token-exchange-credentials
+#       namespace: muster        # optional; defaults to the release namespace
+#       clientIdKey: client-id
+#       clientSecretKey: client-secret
+identityProviders: {}
+
+# Flat list of MCP servers. Required: cluster, group, url.
+#
+# Example entry:
+#   - cluster: cluster-b
+#     group: kubernetes            # category; -> muster type label + family lookup
+#     name: cluster-b-mcp-kubernetes   # optional; defaults to "<cluster>-mcp-<group>"
+#     url: https://example.com/mcp
+#     timeout: 30                  # optional
+#     toolPrefix: ""               # optional
+#     auth:
+#       mode: exchange             # none | forward | exchange
+#       provider: cluster-b            # ref into identityProviders; required for exchange
+#       audiences:                 # optional; overrides defaults.audiences
+#         - dex-k8s-authenticator
+mcpServers: []

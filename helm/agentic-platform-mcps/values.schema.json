@@ -1,0 +1,165 @@
+{
+    "$schema": "http://json-schema.org/schema#",
+    "type": "object",
+    "properties": {
+        "muster": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "families": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "object",
+                        "properties": {
+                            "instanceArg": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "agentgateway": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "tokenExchange": {
+                    "type": "object",
+                    "properties": {
+                        "broker": {
+                            "type": "object",
+                            "properties": {
+                                "kind": {
+                                    "type": "string"
+                                },
+                                "name": {
+                                    "type": "string"
+                                },
+                                "namespace": {
+                                    "type": "string"
+                                },
+                                "port": {
+                                    "type": "integer"
+                                },
+                                "protocol": {
+                                    "type": "string",
+                                    "enum": ["grpc", "http"]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "defaults": {
+            "type": "object",
+            "properties": {
+                "autoStart": {
+                    "type": "boolean"
+                },
+                "transport": {
+                    "type": "string"
+                },
+                "audiences": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "identityProviders": {
+            "type": "object",
+            "additionalProperties": {
+                "type": "object",
+                "required": ["tokenEndpoint"],
+                "properties": {
+                    "tokenEndpoint": {
+                        "type": "string"
+                    },
+                    "connectorId": {
+                        "type": "string"
+                    },
+                    "scopes": {
+                        "type": "string"
+                    },
+                    "credentialsSecret": {
+                        "type": "object",
+                        "properties": {
+                            "name": {
+                                "type": "string"
+                            },
+                            "namespace": {
+                                "type": "string"
+                            },
+                            "clientIdKey": {
+                                "type": "string"
+                            },
+                            "clientSecretKey": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "mcpServers": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "required": ["cluster", "group", "url"],
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "cluster": {
+                        "type": "string"
+                    },
+                    "group": {
+                        "type": "string"
+                    },
+                    "namespace": {
+                        "type": "string"
+                    },
+                    "url": {
+                        "type": "string"
+                    },
+                    "transport": {
+                        "type": "string"
+                    },
+                    "autoStart": {
+                        "type": "boolean"
+                    },
+                    "timeout": {
+                        "type": "integer"
+                    },
+                    "toolPrefix": {
+                        "type": "string"
+                    },
+                    "auth": {
+                        "type": "object",
+                        "properties": {
+                            "mode": {
+                                "type": "string",
+                                "enum": ["none", "oauth", "forward", "exchange"]
+                            },
+                            "provider": {
+                                "type": "string"
+                            },
+                            "audiences": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
