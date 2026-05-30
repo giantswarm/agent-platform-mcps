@@ -1,0 +1,91 @@
+{{- if and .Values.agentgateway.enabled .Values.agentgateway.viaMuster }}
+{{- $host := .Values.agentgateway.host }}
+{{- $musterHost := required "agentgateway.viaMuster requires agentgateway.musterHost (public muster base URL, advertised as OAuth authorization server)" .Values.agentgateway.musterHost }}
+{{- if eq .Values.agentgateway.oauthMode "validate" }}
+{{- $jwt := .Values.agentgateway.jwt }}
+{{- $issuer := required "agentgateway.oauthMode=validate requires agentgateway.jwt.issuer" $jwt.issuer }}
+{{- $backendRef := $jwt.jwksBackendRef }}
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayPolicy
+metadata:
+  name: {{ include "name" . }}-auth
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "labels.common" . | nindent 4 }}
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: {{ .Values.agentgateway.gateway.name | quote }}
+  traffic:
+    jwtAuthentication:
+      providers:
+        - issuer: {{ $issuer | quote }}
+          jwks:
+            remote:
+              backendRef:
+                name: {{ $backendRef.name | quote }}
+                namespace: {{ $backendRef.namespace | quote }}
+                port: {{ $backendRef.port }}
+              jwksPath: {{ $jwt.jwksPath | quote }}
+          {{- with $jwt.audiences }}
+          audiences:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      mcp:
+        resourceMetadata:
+          resource: https://{{ $host }}/mcp
+          authorization_servers:
+            - {{ $musterHost | quote }}
+          bearer_methods_supported:
+            - header
+{{- else if eq .Values.agentgateway.oauthMode "passthrough" }}
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: HTTPRouteFilter
+metadata:
+  name: {{ include "name" . }}-prm
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "labels.common" . | nindent 4 }}
+spec:
+  directResponse:
+    statusCode: 200
+    contentType: application/json
+    body:
+      type: Inline
+      inline: |
+        {"resource":"https://{{ $host }}/mcp","authorization_servers":["{{ $musterHost }}"],"bearer_methods_supported":["header"]}
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ include "name" . }}-prm
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "labels.common" . | nindent 4 }}
+spec:
+  hostnames:
+    - {{ $host | quote }}
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: {{ .Values.agentgateway.ingressGateway.name | quote }}
+      namespace: {{ .Values.agentgateway.ingressGateway.namespace | quote }}
+  rules:
+    - matches:
+        - path:
+            type: Exact
+            value: /.well-known/oauth-protected-resource/mcp
+        - path:
+            type: Exact
+            value: /.well-known/oauth-protected-resource
+      filters:
+        - type: ExtensionRef
+          extensionRef:
+            group: gateway.envoyproxy.io
+            kind: HTTPRouteFilter
+            name: {{ include "name" . }}-prm
+{{- else }}
+{{- fail (printf "agentgateway.oauthMode must be 'validate' or 'passthrough', got %q" .Values.agentgateway.oauthMode) }}
+{{- end }}
+{{- end }}

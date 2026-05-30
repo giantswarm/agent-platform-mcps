@@ -16,6 +16,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   per-server connection + auth + RFC 8693 exchange. The verified inbound token is forwarded to
   muster via `auth.passthrough`; the per-target exchange policies and the `tokenExchange` broker
   are not rendered in this mode. Requires `muster.enabled: true`.
+- `agentgateway.host`, `agentgateway.musterHost`, `agentgateway.gateway`, `agentgateway.ingressGateway`,
+  `agentgateway.serviceName` — when `viaMuster: true`, the chart now also renders the full routing
+  surface: an `HTTPRoute` attaching the agentgateway data-plane `Gateway` to the `AgentgatewayBackend`,
+  an ingress `HTTPRoute` on the cluster-level Envoy `Gateway` for the public hostname, and a
+  `BackendTrafficPolicy` on the ingress route (SSE-friendly timeout + displaces the cluster-wide
+  error-page `responseOverride` so `WWW-Authenticate` headers on `401` responses are preserved).
+- `agentgateway.oauthMode` (`validate` | `passthrough`) — controls OAuth discovery for the new
+  agentgateway hostname so MCP clients find the correct resource identifier and authorization server:
+  - `validate` (default): an `AgentgatewayPolicy` attaches JWT validation (Dex JWKS via
+    `agentgateway.jwt.*`) to the agentgateway `Gateway`, advertising `resource=agentgateway-host/mcp`
+    and `authorization_servers=[muster-host]` in the protected-resource metadata. The `WWW-Authenticate`
+    challenge is correct for header-first clients. Requires a `ReferenceGrant` in the JWKS service's
+    namespace (platform prerequisite).
+  - `passthrough`: a `directResponse` `HTTPRouteFilter` at the ingress `Gateway` serves the corrected
+    `/.well-known/oauth-protected-resource` doc. Fallback for environments where the `ReferenceGrant`
+    is unavailable.
 
 ## [0.1.0] - 2026-05-29
 

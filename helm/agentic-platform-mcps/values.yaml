@@ -4,8 +4,8 @@
 # into the CR family selected by the toggles below:
 #
 #   * muster        -> muster.giantswarm.io/v1alpha1 MCPServer (default on)
-#   * agentgateway  -> agentgateway.dev/v1alpha1 AgentgatewayBackend + per-target
-#                      AgentgatewayPolicy (default off; migration target)
+#   * agentgateway  -> agentgateway.dev/v1alpha1 AgentgatewayBackend + HTTPRoutes +
+#                      BackendTrafficPolicy + OAuth discovery (default off)
 #
 # The input is abstract: it does NOT mirror any one CRD. The chart owns the
 # translation into each backend's CRD. The CRDs themselves are NOT shipped here.
@@ -22,9 +22,9 @@ muster:
     prometheus:
       instanceArg: management_cluster
 
-# Render agentgateway configuration CRs (AgentgatewayBackend + per-target
-# AgentgatewayPolicy). The Gateway, HTTPRoute (routing) and inbound caller (JWT)
-# validation are owned by whoever deploys the agentgateway, NOT by this chart.
+# Render agentgateway configuration CRs (AgentgatewayBackend, HTTPRoutes,
+# BackendTrafficPolicy, and OAuth discovery). When viaMuster is false, also
+# renders per-target AgentgatewayPolicy for token exchange.
 agentgateway:
   enabled: false
   # Front muster instead of connecting to each server directly. When true, the
@@ -36,11 +36,71 @@ agentgateway:
   # and the tokenExchange broker below are NOT used in this mode. Requires
   # muster.enabled: true.
   viaMuster: false
-  # muster aggregator MCP endpoint. Required when viaMuster: true; ignored
-  # otherwise. This is muster's in-cluster aggregator Service (the chart that
-  # deploys muster names it "<release>-muster"), e.g.
-  #   http://agentic-platform-muster.agentic-platform.svc.cluster.local:8090/mcp
+  # muster aggregator MCP endpoint (in-cluster). Required when viaMuster: true.
+  # e.g. http://agentic-platform-muster.agentic-platform.svc.cluster.local:8090/mcp
   musterUrl: ""
+
+  # Public hostname of the agentgateway endpoint. Used as the MCP resource
+  # identifier in OAuth protected-resource metadata (RFC 9728). Required when
+  # viaMuster: true. e.g. agentgateway.<codename>.<base>
+  host: ""
+
+  # Public base URL of muster, advertised as the OAuth authorization server in
+  # the agentgateway protected-resource metadata. Clients (Claude.ai, MCP SDKs)
+  # are directed here to perform DCR / authorization. Required when viaMuster: true.
+  # e.g. https://muster.<codename>.<base>
+  musterHost: ""
+
+  # Name of the agentgateway data-plane Gateway CR in the release namespace.
+  # The chart renders an HTTPRoute attached to this Gateway routing /mcp traffic
+  # to the AgentgatewayBackend.
+  gateway:
+    name: agentgateway
+
+  # The cluster-level ingress Gateway (Envoy Gateway) that terminates TLS and
+  # routes external traffic to the agentgateway Service. The chart renders an
+  # HTTPRoute on this Gateway for the agentgateway.host hostname.
+  ingressGateway:
+    name: giantswarm-default
+    namespace: envoy-gateway-system
+
+  # Name of the agentgateway data-plane Service in the release namespace.
+  # Used as the backendRef in the ingress HTTPRoute.
+  serviceName: agentgateway
+
+  # OAuth discovery mode for the agentgateway hostname. Controls how clients
+  # learn the correct resource identifier and authorization server.
+  #
+  # validate (recommended): an AgentgatewayPolicy attaches JWT validation (Dex)
+  #   to the agentgateway Gateway and configures it to serve the correct
+  #   protected-resource metadata doc (resource=agentgateway-host/mcp,
+  #   authorization_servers=[muster-host]). The WWW-Authenticate header on 401
+  #   responses is correct and header-first MCP clients work without fallback.
+  #   Requires jwt.* and a ReferenceGrant in the JWKS service's namespace
+  #   (platform prerequisite, not rendered by this chart).
+  #
+  # passthrough: agentgateway passes tokens straight to muster without
+  #   validating them. A directResponse HTTPRouteFilter at the ingress Gateway
+  #   serves the corrected protected-resource metadata doc. The WWW-Authenticate
+  #   header may be stripped by cluster-level error-page overrides, so clients
+  #   fall back to path-based discovery (RFC 9728). Use when validate is not
+  #   available (e.g. missing ReferenceGrant or unsupported JWKS backendRef).
+  oauthMode: validate
+
+  # JWT validation config (oauthMode: validate only). agentgateway fetches the
+  # JWKS from the named Kubernetes Service to verify inbound tokens. A
+  # ReferenceGrant in jwksBackendRef.namespace must allow agentgateway-policy
+  # to reference that Service (platform prerequisite, not rendered here).
+  jwt:
+    issuer: ""
+    jwksBackendRef:
+      name: dex
+      namespace: giantswarm
+      port: 5556
+    jwksPath: /keys
+    audiences:
+      - dex-k8s-authenticator
+
   # Outbound cross-cluster auth (mode: exchange) is delegated to a muster broker
   # called as an Envoy-style ext_authz service. One per-target policy is rendered
   # for each server with auth.mode=exchange. (Unused when viaMuster: true.)

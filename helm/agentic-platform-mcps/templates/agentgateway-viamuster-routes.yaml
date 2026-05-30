@@ -1,0 +1,48 @@
+{{- if and .Values.agentgateway.enabled .Values.agentgateway.viaMuster }}
+{{- $host := required "agentgateway.viaMuster requires agentgateway.host (public hostname for the agentgateway endpoint)" .Values.agentgateway.host }}
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ include "name" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "labels.common" . | nindent 4 }}
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: {{ .Values.agentgateway.gateway.name | quote }}
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - group: agentgateway.dev
+          kind: AgentgatewayBackend
+          name: {{ include "name" . }}
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ include "name" . }}-ingress
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "labels.common" . | nindent 4 }}
+spec:
+  hostnames:
+    - {{ $host | quote }}
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: {{ .Values.agentgateway.ingressGateway.name | quote }}
+      namespace: {{ .Values.agentgateway.ingressGateway.namespace | quote }}
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: {{ .Values.agentgateway.serviceName | quote }}
+          port: 8080
+{{- end }}

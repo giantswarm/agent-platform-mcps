@@ -8,8 +8,78 @@
                 "enabled": {
                     "type": "boolean"
                 },
+                "viaMuster": {
+                    "type": "boolean"
+                },
                 "musterUrl": {
                     "type": "string"
+                },
+                "host": {
+                    "type": "string"
+                },
+                "musterHost": {
+                    "type": "string"
+                },
+                "gateway": {
+                    "type": "object",
+                    "properties": {
+                        "name": {
+                            "type": "string"
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "ingressGateway": {
+                    "type": "object",
+                    "properties": {
+                        "name": {
+                            "type": "string"
+                        },
+                        "namespace": {
+                            "type": "string"
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "serviceName": {
+                    "type": "string"
+                },
+                "oauthMode": {
+                    "type": "string",
+                    "enum": ["validate", "passthrough"]
+                },
+                "jwt": {
+                    "type": "object",
+                    "properties": {
+                        "issuer": {
+                            "type": "string"
+                        },
+                        "jwksBackendRef": {
+                            "type": "object",
+                            "properties": {
+                                "name": {
+                                    "type": "string"
+                                },
+                                "namespace": {
+                                    "type": "string"
+                                },
+                                "port": {
+                                    "type": "integer"
+                                }
+                            },
+                            "additionalProperties": false
+                        },
+                        "jwksPath": {
+                            "type": "string"
+                        },
+                        "audiences": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "additionalProperties": false
                 },
                 "tokenExchange": {
                     "type": "object",
@@ -37,9 +107,6 @@
                         }
                     },
                     "additionalProperties": false
-                },
-                "viaMuster": {
-                    "type": "boolean"
                 }
             },
             "additionalProperties": false
