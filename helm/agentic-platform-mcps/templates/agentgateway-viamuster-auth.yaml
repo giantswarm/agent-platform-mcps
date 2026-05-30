@@ -1,35 +1,19 @@
 {{- if and .Values.agentgateway.enabled .Values.agentgateway.viaMuster }}
 {{- $host := required "agentgateway.viaMuster requires agentgateway.host" .Values.agentgateway.host }}
 {{- $musterHost := required "agentgateway.viaMuster requires agentgateway.musterHost" .Values.agentgateway.musterHost }}
+{{- $musterUrl := required "agentgateway.viaMuster requires agentgateway.musterUrl" .Values.agentgateway.musterUrl }}
 {{- /*
-Both modes always render the directResponse HTTPRouteFilter + HTTPRoute to serve a
-corrected /.well-known/oauth-protected-resource doc at the agentgateway hostname.
-This is always necessary because muster's own doc advertises resource=muster-host,
-which mismatches the URL the client dialled (agentgateway-host).
+Proxy /.well-known/oauth-protected-resource[/mcp] at the agentgateway hostname
+to muster's own well-known endpoint. muster's response is correct because
+muster.oauth.server.resourceIdentifier is set to the agentgateway hostname in
+shared-configs, so muster advertises resource=agentgateway-host/mcp.
 
-oauthMode: passthrough — metadata shim only; agentgateway forwards tokens to muster
-  without validating them. muster is the sole enforcement point.
-oauthMode: validate — metadata shim PLUS an AgentgatewayPolicy that validates JWTs at
-  the edge using generic jwtAuthentication.providers[] (any OIDC issuer, no Auth0/
-  Keycloak preset required). agentgateway rejects invalid tokens before they reach
-  muster; muster still validates as a second layer.
+This is a standard Gateway API HTTPRoute — no Envoy-specific extensions — so it
+works with any Gateway API implementation.
+
+Both oauthMode values share this route. The only difference between modes is
+whether an AgentgatewayPolicy is rendered for edge JWT validation.
 */}}
-apiVersion: gateway.envoyproxy.io/v1alpha1
-kind: HTTPRouteFilter
-metadata:
-  name: {{ include "name" . }}-prm
-  namespace: {{ .Release.Namespace }}
-  labels:
-    {{- include "labels.common" . | nindent 4 }}
-spec:
-  directResponse:
-    statusCode: 200
-    contentType: application/json
-    body:
-      type: Inline
-      inline: |
-        {"resource":"https://{{ $host }}/mcp","authorization_servers":["{{ $musterHost }}"],"bearer_methods_supported":["header"]}
----
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
@@ -53,12 +37,9 @@ spec:
         - path:
             type: Exact
             value: /.well-known/oauth-protected-resource
-      filters:
-        - type: ExtensionRef
-          extensionRef:
-            group: gateway.envoyproxy.io
-            kind: HTTPRouteFilter
-            name: {{ include "name" . }}-prm
+      backendRefs:
+        - name: {{ include "mcp.host" $musterUrl | splitList "." | first | quote }}
+          port: {{ include "mcp.port" $musterUrl }}
 {{- if eq .Values.agentgateway.oauthMode "validate" }}
 {{- $jwt := .Values.agentgateway.jwt }}
 {{- $issuer := required "agentgateway.oauthMode=validate requires agentgateway.jwt.issuer" $jwt.issuer }}
