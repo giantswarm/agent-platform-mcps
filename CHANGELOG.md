@@ -16,11 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `AgentgatewayBackend` — single target pointing at muster's aggregator endpoint with
     `auth.passthrough` (token forwarded to muster unchanged; muster is the enforcement point).
   - `HTTPRoute` — connects the agentgateway data-plane Gateway to the Backend.
-  - `HTTPRouteFilter` + `HTTPRoute` — serves a corrected `/.well-known/oauth-protected-resource`
-    doc at `agentgateway.host` with `resource=agentgateway-host/mcp` and
-    `authorization_servers=[muster-host]`. Required because muster's own doc advertises
-    `resource=muster-host`, which would cause an MCP SDK resource-mismatch error for clients
-    dialling the agentgateway hostname.
+  - `HTTPRoute` (`-prm`) — proxies `agentgateway-host/.well-known/oauth-protected-resource[/mcp]`
+    to the muster Service using a standard `gateway.networking.k8s.io HTTPRoute` (no Envoy-specific
+    extensions). muster serves the correct doc because `muster.oauth.server.resourceIdentifier`
+    is set to the agentgateway hostname in shared-configs.
   - Public ingress `HTTPRoute` and `BackendTrafficPolicy` are owned by the `agentic-platform`
     umbrella chart (`gateway.httpRoute` / `gateway.backendTrafficPolicy`), not this chart.
 - `agentgateway.oauthMode` (`passthrough` | `validate`, default `passthrough`):

@@ -1,6 +1,6 @@
 {{- if and .Values.agentgateway.enabled .Values.agentgateway.viaMuster }}
 {{- $host := required "agentgateway.viaMuster requires agentgateway.host" .Values.agentgateway.host }}
-{{- $musterHost := required "agentgateway.viaMuster requires agentgateway.musterHost" .Values.agentgateway.musterHost }}
+{{- $musterHost := .Values.agentgateway.musterHost | default "" }}
 {{- $musterUrl := required "agentgateway.viaMuster requires agentgateway.musterUrl" .Values.agentgateway.musterUrl }}
 {{- /*
 Proxy /.well-known/oauth-protected-resource[/mcp] at the agentgateway hostname
