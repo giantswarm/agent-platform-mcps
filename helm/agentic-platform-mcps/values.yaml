@@ -52,21 +52,21 @@ agentgateway:
   musterHost: ""
 
   # Name of the agentgateway data-plane Gateway CR in the release namespace.
-  # The chart renders an HTTPRoute attached to this Gateway routing /mcp traffic
-  # to the AgentgatewayBackend.
+  # The chart renders an HTTPRoute on this Gateway to connect it to the
+  # AgentgatewayBackend. The public ingress HTTPRoute (cluster ingress gateway
+  # -> agentgateway Service) is owned by the agentic-platform umbrella chart.
   gateway:
     name: agentgateway
 
-  # The cluster-level ingress Gateway (Envoy Gateway) that terminates TLS and
-  # routes external traffic to the agentgateway Service. The chart renders an
-  # HTTPRoute on this Gateway for the agentgateway.host hostname.
+  # Cluster ingress Gateway used in oauthMode: passthrough only. The
+  # directResponse HTTPRoute for /.well-known/oauth-protected-resource must
+  # attach to the ingress gateway (not the agentgateway Gateway) so it can
+  # short-circuit before the request reaches agentgateway and is forwarded to
+  # muster (which would serve its own resource identifier, not agentgateway's).
+  # Not used in oauthMode: validate.
   ingressGateway:
     name: giantswarm-default
     namespace: envoy-gateway-system
-
-  # Name of the agentgateway data-plane Service in the release namespace.
-  # Used as the backendRef in the ingress HTTPRoute.
-  serviceName: agentgateway
 
   # OAuth discovery mode for the agentgateway hostname. Controls how clients
   # learn the correct resource identifier and authorization server.

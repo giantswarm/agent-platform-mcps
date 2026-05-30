@@ -29,24 +29,12 @@
                     },
                     "additionalProperties": false
                 },
-                "ingressGateway": {
-                    "type": "object",
-                    "properties": {
-                        "name": {
-                            "type": "string"
-                        },
-                        "namespace": {
-                            "type": "string"
-                        }
-                    },
-                    "additionalProperties": false
-                },
-                "serviceName": {
-                    "type": "string"
-                },
                 "oauthMode": {
                     "type": "string",
-                    "enum": ["validate", "passthrough"]
+                    "enum": [
+                        "validate",
+                        "passthrough"
+                    ]
                 },
                 "jwt": {
                     "type": "object",
@@ -107,6 +95,18 @@
                         }
                     },
                     "additionalProperties": false
+                },
+                "ingressGateway": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "name": {
+                            "type": "string"
+                        },
+                        "namespace": {
+                            "type": "string"
+                        }
+                    }
                 }
             },
             "additionalProperties": false
