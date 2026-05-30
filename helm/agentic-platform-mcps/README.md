@@ -12,31 +12,27 @@ Chart to deploy MCPs for GiantSwarm Agentic Platform.
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| muster.enabled | bool | `true` |  |
-| muster.families.kubernetes.instanceArg | string | `"management_cluster"` |  |
-| muster.families.prometheus.instanceArg | string | `"management_cluster"` |  |
-| agentgateway.enabled | bool | `false` |  |
-| agentgateway.viaMuster | bool | `false` |  |
-| agentgateway.musterUrl | string | `""` |  |
-| agentgateway.host | string | `""` |  |
-| agentgateway.musterHost | string | `""` |  |
-| agentgateway.gateway.name | string | `"agentgateway"` |  |
-| agentgateway.ingressGateway.name | string | `"giantswarm-default"` |  |
-| agentgateway.ingressGateway.namespace | string | `"envoy-gateway-system"` |  |
-| agentgateway.oauthMode | string | `"passthrough"` |  |
-| agentgateway.jwt.issuer | string | `""` |  |
-| agentgateway.jwt.jwksBackendRef.name | string | `"dex"` |  |
-| agentgateway.jwt.jwksBackendRef.namespace | string | `"giantswarm"` |  |
-| agentgateway.jwt.jwksBackendRef.port | int | `5556` |  |
-| agentgateway.jwt.jwksPath | string | `"/keys"` |  |
-| agentgateway.jwt.audiences[0] | string | `"dex-k8s-authenticator"` |  |
-| agentgateway.tokenExchange.broker.kind | string | `"Service"` |  |
-| agentgateway.tokenExchange.broker.name | string | `"muster-token-exchange-broker"` |  |
-| agentgateway.tokenExchange.broker.namespace | string | `"muster"` |  |
-| agentgateway.tokenExchange.broker.port | int | `8080` |  |
-| agentgateway.tokenExchange.broker.protocol | string | `"grpc"` |  |
-| defaults.autoStart | bool | `true` |  |
-| defaults.transport | string | `"streamable-http"` |  |
-| defaults.audiences[0] | string | `"dex-k8s-authenticator"` |  |
-| identityProviders | object | `{}` |  |
-| mcpServers | list | `[]` |  |
+| muster | object | `{"enabled":true,"families":{"kubernetes":{"instanceArg":"management_cluster"},"prometheus":{"instanceArg":"management_cluster"}}}` | Render muster MCPServer CRs from the mcpServers list. |
+| muster.enabled | bool | `true` | Enable muster MCPServer rendering. |
+| muster.families | object | `{"kubernetes":{"instanceArg":"management_cluster"},"prometheus":{"instanceArg":"management_cluster"}}` | Groups that muster exposes as instance families. A server whose `group` is listed here gets a muster `family` block; unlisted groups are singletons. |
+| agentgateway | object | `{"enabled":false,"gateway":{"name":"agentgateway"},"host":"","ingressGateway":{"name":"giantswarm-default","namespace":"envoy-gateway-system"},"jwt":{"audiences":["dex-k8s-authenticator"],"issuer":"","jwksBackendRef":{"name":"dex","namespace":"giantswarm","port":5556},"jwksPath":"/keys"},"musterHost":"","musterUrl":"","oauthMode":"passthrough","tokenExchange":{"broker":{"kind":"Service","name":"muster-token-exchange-broker","namespace":"muster","port":8080,"protocol":"grpc"}},"viaMuster":false}` | Render agentgateway CRs for the via-muster topology. When viaMuster is true the traffic flow is:   client → agentgateway → muster → N MCP servers agentgateway becomes the single MCP choke point for observability (per-call metrics, traces, access logs). muster keeps all per-server connection logic, OAuth, and RFC 8693 token exchange. |
+| agentgateway.enabled | bool | `false` | Enable agentgateway CR rendering. |
+| agentgateway.viaMuster | bool | `false` | Route all MCP traffic through muster as a single backend instead of connecting agentgateway directly to each server. Requires muster.enabled: true. |
+| agentgateway.musterUrl | string | `""` | In-cluster muster aggregator endpoint. Required when viaMuster: true. Typically http://<release>-muster.<namespace>.svc.cluster.local:8090/mcp |
+| agentgateway.host | string | `""` | Public hostname of the agentgateway endpoint. Becomes the MCP resource identifier in OAuth protected-resource metadata (RFC 9728). Must match the URL MCP clients dial exactly. Required when viaMuster: true. |
+| agentgateway.musterHost | string | `""` | Public base URL of muster, advertised as the OAuth authorization server in the protected-resource metadata. Clients perform DCR and authorization at this URL. Required when viaMuster: true. |
+| agentgateway.gateway | object | `{"name":"agentgateway"}` | Name of the agentgateway data-plane Gateway CR in the release namespace. An HTTPRoute is rendered on this Gateway connecting it to the AgentgatewayBackend. The public ingress HTTPRoute (cluster ingress → agentgateway Service) is owned by the agentic-platform umbrella chart (gateway.httpRoute). |
+| agentgateway.ingressGateway | object | `{"name":"giantswarm-default","namespace":"envoy-gateway-system"}` | Cluster ingress Gateway used in oauthMode: passthrough only. The directResponse HTTPRoute for /.well-known/oauth-protected-resource attaches here so it short-circuits before requests reach agentgateway and are forwarded to muster (which would serve its own resource identifier). |
+| agentgateway.oauthMode | string | `"passthrough"` | OAuth discovery mode. Both modes always render the directResponse HTTPRouteFilter + HTTPRoute that serves a corrected /.well-known/oauth-protected-resource doc at the agentgateway hostname (resource=agentgateway-host/mcp, authorization_servers=[muster-host]). This is necessary because muster's own doc advertises resource=muster-host, which mismatches the URL the MCP client dialled.  passthrough: agentgateway forwards tokens to muster without validating them.   muster is the sole enforcement point. Use when edge validation is not   needed or when the JWKS service is unreachable from the data-plane.  validate: an AgentgatewayPolicy adds JWT validation at the agentgateway   Gateway using generic jwtAuthentication.providers[] (any OIDC issuer,   no Auth0/Keycloak preset required). agentgateway rejects invalid/expired   tokens before they reach muster. Requires jwt.* and a ReferenceGrant in   jwksBackendRef.namespace allowing the agentgateway policy to reference   the JWKS Service (platform prerequisite, not rendered by this chart).   Token exchange still works: agentgateway only sees the inbound user token;   muster performs all downstream RFC 8693 exchanges internally. @schema enum: [validate, passthrough] |
+| agentgateway.jwt | object | `{"audiences":["dex-k8s-authenticator"],"issuer":"","jwksBackendRef":{"name":"dex","namespace":"giantswarm","port":5556},"jwksPath":"/keys"}` | JWT validation config (oauthMode: validate only). agentgateway fetches the JWKS from the named Kubernetes Service to verify inbound tokens locally (cached; no per-request network call). |
+| agentgateway.jwt.issuer | string | `""` | OIDC issuer URL. Must match the `iss` claim in inbound tokens. |
+| agentgateway.jwt.jwksBackendRef | object | `{"name":"dex","namespace":"giantswarm","port":5556}` | Kubernetes Service reference for the JWKS endpoint. |
+| agentgateway.jwt.jwksPath | string | `"/keys"` | Path on the JWKS Service where public keys are served. |
+| agentgateway.jwt.audiences | list | `["dex-k8s-authenticator"]` | Expected `aud` claim values. Tokens not carrying one of these audiences are rejected. |
+| agentgateway.tokenExchange | object | `{"broker":{"kind":"Service","name":"muster-token-exchange-broker","namespace":"muster","port":8080,"protocol":"grpc"}}` | Outbound token-exchange broker for auth.mode=exchange servers. One AgentgatewayPolicy per exchange target is rendered, delegating cross-cluster token exchange to this ext_authz service. Not used when viaMuster: true (muster handles all exchange internally). |
+| defaults | object | `{"audiences":["dex-k8s-authenticator"],"autoStart":true,"transport":"streamable-http"}` | Defaults applied to every mcpServers entry unless overridden per entry. |
+| defaults.autoStart | bool | `true` | Start connections automatically when muster starts. |
+| defaults.transport | string | `"streamable-http"` | MCP transport protocol. |
+| defaults.audiences | list | `["dex-k8s-authenticator"]` | Audiences required at the upstream for oauth-authenticated servers. |
+| identityProviders | object | `{}` | Identity providers, defined once and referenced by servers via auth.provider. Multiple servers on the same cluster share one entry instead of repeating token-exchange config. |
+| mcpServers | list | `[]` | Flat list of MCP servers. Required fields per entry: cluster, group, url. |

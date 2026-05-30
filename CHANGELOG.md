@@ -9,29 +9,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- `agentgateway.viaMuster` — front muster instead of connecting to each server directly. When
-  enabled, the `AgentgatewayBackend` renders a single target pointing at muster's aggregator MCP
-  endpoint (`agentgateway.musterUrl`), so traffic flows `client → agentgateway → muster → servers`.
-  agentgateway becomes the single MCP choke point for observability while muster keeps doing
-  per-server connection + auth + RFC 8693 exchange. The verified inbound token is forwarded to
-  muster via `auth.passthrough`; the per-target exchange policies and the `tokenExchange` broker
-  are not rendered in this mode. Requires `muster.enabled: true`.
-- `agentgateway.host`, `agentgateway.musterHost`, `agentgateway.gateway`, `agentgateway.ingressGateway`,
-  `agentgateway.serviceName` — when `viaMuster: true`, the chart now also renders the full routing
-  surface: an `HTTPRoute` attaching the agentgateway data-plane `Gateway` to the `AgentgatewayBackend`,
-  an ingress `HTTPRoute` on the cluster-level Envoy `Gateway` for the public hostname, and a
-  `BackendTrafficPolicy` on the ingress route (SSE-friendly timeout + displaces the cluster-wide
-  error-page `responseOverride` so `WWW-Authenticate` headers on `401` responses are preserved).
-- `agentgateway.oauthMode` (`validate` | `passthrough`) — controls OAuth discovery for the new
-  agentgateway hostname so MCP clients find the correct resource identifier and authorization server:
-  - `validate` (default): an `AgentgatewayPolicy` attaches JWT validation (Dex JWKS via
-    `agentgateway.jwt.*`) to the agentgateway `Gateway`, advertising `resource=agentgateway-host/mcp`
-    and `authorization_servers=[muster-host]` in the protected-resource metadata. The `WWW-Authenticate`
-    challenge is correct for header-first clients. Requires a `ReferenceGrant` in the JWKS service's
-    namespace (platform prerequisite).
-  - `passthrough`: a `directResponse` `HTTPRouteFilter` at the ingress `Gateway` serves the corrected
-    `/.well-known/oauth-protected-resource` doc. Fallback for environments where the `ReferenceGrant`
-    is unavailable.
+- `agentgateway.viaMuster` — via-muster topology: `client → agentgateway → muster → N MCP servers`.
+  agentgateway becomes the single MCP choke point for observability (per-call metrics, traces,
+  access logs with `protocol=mcp`, tool name, session id, latency). muster keeps all per-server
+  connection logic, OAuth, and RFC 8693 token exchange. Renders:
+  - `AgentgatewayBackend` — single target pointing at muster's aggregator endpoint with
+    `auth.passthrough` (token forwarded to muster unchanged; muster is the enforcement point).
+  - `HTTPRoute` — connects the agentgateway data-plane Gateway to the Backend.
+  - `HTTPRouteFilter` + `HTTPRoute` — serves a corrected `/.well-known/oauth-protected-resource`
+    doc at `agentgateway.host` with `resource=agentgateway-host/mcp` and
+    `authorization_servers=[muster-host]`. Required because muster's own doc advertises
+    `resource=muster-host`, which would cause an MCP SDK resource-mismatch error for clients
+    dialling the agentgateway hostname.
+  - Public ingress `HTTPRoute` and `BackendTrafficPolicy` are owned by the `agentic-platform`
+    umbrella chart (`gateway.httpRoute` / `gateway.backendTrafficPolicy`), not this chart.
+- `agentgateway.oauthMode` (`passthrough` | `validate`, default `passthrough`):
+  - `passthrough` — agentgateway forwards tokens to muster without validating them. muster is
+    the sole enforcement point. The well-known shim is served regardless.
+  - `validate` — additionally renders an `AgentgatewayPolicy` with generic
+    `jwtAuthentication.providers[]` (any OIDC issuer; no Auth0/Keycloak preset required).
+    agentgateway validates the inbound token at the edge before forwarding to muster. muster
+    still validates as a second layer. Token exchange is unaffected: agentgateway only sees
+    the inbound user token; muster performs all downstream RFC 8693 exchanges internally.
+    Requires `agentgateway.jwt.*` and a `ReferenceGrant` in `jwksBackendRef.namespace`
+    (platform prerequisite, not rendered by this chart).
 
 ## [0.1.0] - 2026-05-29
 
