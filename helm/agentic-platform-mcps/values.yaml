@@ -85,6 +85,7 @@ agentgateway:
   #   header may be stripped by cluster-level error-page overrides, so clients
   #   fall back to path-based discovery (RFC 9728). Use when validate is not
   #   available (e.g. missing ReferenceGrant or unsupported JWKS backendRef).
+  # @schema enum: [validate, passthrough]
   oauthMode: validate
 
   # JWT validation config (oauthMode: validate only). agentgateway fetches the

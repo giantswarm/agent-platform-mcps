@@ -8,18 +8,6 @@
                 "enabled": {
                     "type": "boolean"
                 },
-                "viaMuster": {
-                    "type": "boolean"
-                },
-                "musterUrl": {
-                    "type": "string"
-                },
-                "host": {
-                    "type": "string"
-                },
-                "musterHost": {
-                    "type": "string"
-                },
                 "gateway": {
                     "type": "object",
                     "properties": {
@@ -29,16 +17,30 @@
                     },
                     "additionalProperties": false
                 },
-                "oauthMode": {
-                    "type": "string",
-                    "enum": [
-                        "validate",
-                        "passthrough"
-                    ]
+                "host": {
+                    "type": "string"
+                },
+                "ingressGateway": {
+                    "type": "object",
+                    "properties": {
+                        "name": {
+                            "type": "string"
+                        },
+                        "namespace": {
+                            "type": "string"
+                        }
+                    },
+                    "additionalProperties": false
                 },
                 "jwt": {
                     "type": "object",
                     "properties": {
+                        "audiences": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
                         "issuer": {
                             "type": "string"
                         },
@@ -59,15 +61,22 @@
                         },
                         "jwksPath": {
                             "type": "string"
-                        },
-                        "audiences": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            }
                         }
                     },
                     "additionalProperties": false
+                },
+                "musterHost": {
+                    "type": "string"
+                },
+                "musterUrl": {
+                    "type": "string"
+                },
+                "oauthMode": {
+                    "type": "string",
+                    "enum": [
+                        "validate",
+                        "passthrough"
+                    ]
                 },
                 "tokenExchange": {
                     "type": "object",
@@ -96,17 +105,8 @@
                     },
                     "additionalProperties": false
                 },
-                "ingressGateway": {
-                    "type": "object",
-                    "additionalProperties": false,
-                    "properties": {
-                        "name": {
-                            "type": "string"
-                        },
-                        "namespace": {
-                            "type": "string"
-                        }
-                    }
+                "viaMuster": {
+                    "type": "boolean"
                 }
             },
             "additionalProperties": false
