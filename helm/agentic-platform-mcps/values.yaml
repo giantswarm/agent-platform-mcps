@@ -74,8 +74,7 @@ agentgateway:
   #   the JWKS Service (platform prerequisite, not rendered by this chart).
   #   Token exchange still works: agentgateway only sees the inbound user token;
   #   muster performs all downstream RFC 8693 exchanges internally.
-  # @schema enum: [validate, passthrough]
-  oauthMode: passthrough
+  oauthMode: passthrough # @schema enum: [validate, passthrough]
   # -- JWT validation config (oauthMode: validate only).
   # agentgateway fetches the JWKS from the named Kubernetes Service to verify
   # inbound tokens locally (cached; no per-request network call).
@@ -118,7 +117,41 @@ defaults:
 # -- Identity providers, defined once and referenced by servers via auth.provider.
 # Multiple servers on the same cluster share one entry instead of repeating
 # token-exchange config.
+#
+# Example:
+#   cluster-b:
+#     tokenEndpoint: https://dex.cluster-b.example.com/token
+#     connectorId: giantswarm-simple-oidc
+#     scopes: openid profile email groups
+#     credentialsSecret:
+#       name: cluster-b-token-exchange-credentials
+#       namespace: muster        # optional; defaults to the release namespace
+#       clientIdKey: client-id
+#       clientSecretKey: client-secret
 identityProviders: {}
 
 # -- Flat list of MCP servers. Required fields per entry: cluster, group, url.
+#
+# Example entries:
+#   # Same-cluster server, token forwarded as-is:
+#   - cluster: graveler
+#     group: kubernetes
+#     url: https://mcp-kubernetes.graveler.example.com/mcp
+#     auth:
+#       mode: forward
+#
+#   # Remote cluster server, RFC 8693 token exchange via identityProviders:
+#   - cluster: gazelle
+#     group: kubernetes
+#     url: https://mcp-kubernetes.gazelle.example.com/mcp
+#     auth:
+#       mode: exchange
+#       provider: gazelle          # ref into identityProviders above
+#
+#   # Unauthenticated server:
+#   - cluster: graveler
+#     group: prometheus
+#     url: https://mcp-prometheus.graveler.example.com/mcp
+#     auth:
+#       mode: none
 mcpServers: []
