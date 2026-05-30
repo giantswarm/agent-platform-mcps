@@ -23,7 +23,7 @@ Chart to deploy MCPs for GiantSwarm Agentic Platform.
 | agentgateway.gateway.name | string | `"agentgateway"` |  |
 | agentgateway.ingressGateway.name | string | `"giantswarm-default"` |  |
 | agentgateway.ingressGateway.namespace | string | `"envoy-gateway-system"` |  |
-| agentgateway.oauthMode | string | `"validate"` |  |
+| agentgateway.oauthMode | string | `"passthrough"` |  |
 | agentgateway.jwt.issuer | string | `""` |  |
 | agentgateway.jwt.jwksBackendRef.name | string | `"dex"` |  |
 | agentgateway.jwt.jwksBackendRef.namespace | string | `"giantswarm"` |  |
