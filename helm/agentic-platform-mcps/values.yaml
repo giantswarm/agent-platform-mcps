@@ -74,7 +74,7 @@ agentgateway:
   #   the JWKS Service (platform prerequisite, not rendered by this chart).
   #   Token exchange still works: agentgateway only sees the inbound user token;
   #   muster performs all downstream RFC 8693 exchanges internally.
-  oauthMode: passthrough # @schema enum: [validate, passthrough]
+  oauthMode: passthrough  # @schema enum: [validate, passthrough]
   # -- JWT validation config (oauthMode: validate only).
   # agentgateway fetches the JWKS from the named Kubernetes Service to verify
   # inbound tokens locally (cached; no per-request network call).
