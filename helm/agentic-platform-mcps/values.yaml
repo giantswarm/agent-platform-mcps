@@ -34,57 +34,28 @@ agentgateway:
   # -- In-cluster muster aggregator endpoint. Required when viaMuster: true.
   # Typically http://<release>-muster.<namespace>.svc.cluster.local:8090/mcp
   musterUrl: ""
-  # -- Public hostname of the agentgateway endpoint. Becomes the MCP resource
-  # identifier in OAuth protected-resource metadata (RFC 9728). Must match the
-  # URL MCP clients dial exactly. Required when viaMuster: true.
-  host: ""
-  # -- Public base URL of muster, advertised as the OAuth authorization server
-  # in the protected-resource metadata. Clients perform DCR and authorization
-  # at this URL. Required when viaMuster: true.
-  musterHost: ""
   # -- Name of the agentgateway data-plane Gateway CR in the release namespace.
   # An HTTPRoute is rendered on this Gateway connecting it to the AgentgatewayBackend.
   # The public ingress HTTPRoute (cluster ingress → agentgateway Service) is
   # owned by the agentic-platform umbrella chart (gateway.httpRoute).
   gateway:
     name: agentgateway
-  # -- Cluster ingress Gateway where the well-known OAuth proxy HTTPRoute attaches.
-  # Routes /.well-known/oauth-{protected-resource,authorization-server} and
-  # /.well-known/openid-configuration from agentgateway-host to the muster Service.
-  # Required because some MCP SDKs fetch these paths at the resource server hostname
-  # directly, not only from the authorization_servers URL in the protected-resource doc.
-  ingressGateway:
-    name: giantswarm-default
-    namespace: envoy-gateway-system
   # -- OAuth discovery and edge validation mode.
   #
-  # Both modes always render an HTTPRoute proxying OAuth discovery paths from
-  # agentgateway-host to muster. muster serves the correct content because
-  # muster.oauth.server.resourceIdentifier is set to agentgateway-host/mcp
-  # in shared-configs, making muster advertise the agentgateway URL as the
-  # protected resource in its WWW-Authenticate challenge and well-known docs.
+  # muster serves all OAuth discovery paths natively (/.well-known/oauth-protected-resource,
+  # /.well-known/oauth-authorization-server, etc.) because clients dial the muster hostname
+  # directly. No proxy HTTPRoute is needed.
   #
   # passthrough (current default): agentgateway forwards all tokens to muster
-  #   without inspecting them. muster is the sole enforcement point. Use this
-  #   until oauthMode: validate is unblocked (see below).
+  #   without inspecting them. muster is the sole enforcement point.
   #
-  # validate (preferred, pending): additionally renders an AgentgatewayPolicy
-  #   with generic jwtAuthentication.providers[] (any OIDC issuer; no
-  #   Auth0/Keycloak preset required). agentgateway validates the inbound token
-  #   at the edge before forwarding. muster still validates downstream (defence
-  #   in depth). Token exchange is unaffected: agentgateway only sees the inbound
-  #   user token; muster performs all RFC 8693 exchanges internally.
-  #
-  #   BLOCKER: agentgateway's jwtAuthentication without an mcp.provider preset
-  #   (Auth0|Keycloak enum) does not emit the MCP-specific WWW-Authenticate
-  #   challenge that MCP SDKs need to bootstrap the OAuth flow on first contact.
-  #   Clients hit agentgateway's raw 401 and fail to parse it as an OAuth error.
-  #   Fix requires either:
-  #     a) agentgateway adds generic OIDC as a supported mcp.provider (upstream FR)
-  #     b) muster PR #757 lands + enableJWTMode: true: muster signs its own JWTs,
-  #        agentgateway validates against muster's JWKS (same namespace, no
-  #        ReferenceGrant), and the -prm proxy route handles discovery for clients
-  #        that fall back to path-based discovery (RFC 9728) instead of the header.
+  # validate: additionally renders an AgentgatewayPolicy with jwtAuthentication
+  #   pointing at the JWKS endpoint. agentgateway validates the inbound token at
+  #   the edge before forwarding. muster still validates downstream (defence in depth).
+  #   BLOCKER: agentgateway's jwtAuthentication without an mcp.provider preset does
+  #   not emit the MCP-specific WWW-Authenticate challenge, breaking OAuth bootstrap.
+  #   Requires muster PR #757 + enableJWTMode: true so agentgateway can validate
+  #   against muster's own JWKS.
   oauthMode: passthrough  # @schema enum: [validate, passthrough]
   # -- JWT validation config — only used when oauthMode: validate.
   # agentgateway fetches the JWKS from the named Kubernetes Service to verify

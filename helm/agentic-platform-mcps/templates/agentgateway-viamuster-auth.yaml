@@ -1,55 +1,7 @@
 {{- if and .Values.agentgateway.enabled .Values.agentgateway.viaMuster }}
-{{- $host := required "agentgateway.viaMuster requires agentgateway.host" .Values.agentgateway.host }}
-{{- $musterHost := .Values.agentgateway.musterHost | default "" }}
-{{- $musterUrl := required "agentgateway.viaMuster requires agentgateway.musterUrl" .Values.agentgateway.musterUrl }}
-{{- /*
-Proxy /.well-known/oauth-protected-resource[/mcp] at the agentgateway hostname
-to muster's own well-known endpoint. muster's response is correct because
-muster.oauth.server.resourceIdentifier is set to the agentgateway hostname in
-shared-configs, so muster advertises resource=agentgateway-host/mcp.
-
-This is a standard Gateway API HTTPRoute — no Envoy-specific extensions — so it
-works with any Gateway API implementation.
-
-Both oauthMode values share this route. The only difference between modes is
-whether an AgentgatewayPolicy is rendered for edge JWT validation.
-*/}}
-apiVersion: gateway.networking.k8s.io/v1
-kind: HTTPRoute
-metadata:
-  name: {{ include "name" . }}-prm
-  namespace: {{ .Release.Namespace }}
-  labels:
-    {{- include "labels.common" . | nindent 4 }}
-spec:
-  hostnames:
-    - {{ $host | quote }}
-  parentRefs:
-    - group: gateway.networking.k8s.io
-      kind: Gateway
-      name: {{ .Values.agentgateway.ingressGateway.name | quote }}
-      namespace: {{ .Values.agentgateway.ingressGateway.namespace | quote }}
-  rules:
-    - matches:
-        - path:
-            type: Exact
-            value: /.well-known/oauth-protected-resource/mcp
-        - path:
-            type: Exact
-            value: /.well-known/oauth-protected-resource
-        - path:
-            type: Exact
-            value: /.well-known/oauth-authorization-server
-        - path:
-            type: Exact
-            value: /.well-known/openid-configuration
-      backendRefs:
-        - name: {{ include "mcp.host" $musterUrl | splitList "." | first | quote }}
-          port: {{ include "mcp.port" $musterUrl }}
 {{- if eq .Values.agentgateway.oauthMode "validate" }}
 {{- $jwt := .Values.agentgateway.jwt }}
 {{- $issuer := required "agentgateway.oauthMode=validate requires agentgateway.jwt.issuer" $jwt.issuer }}
----
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayPolicy
 metadata:
