@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `agentgateway.viaMuster` — via-muster topology: `client → agentgateway → muster → N MCP servers`.
+  agentgateway becomes the single MCP choke point for observability (per-call metrics, traces,
+  access logs with `protocol=mcp`, tool name, session id, latency). muster keeps all per-server
+  connection logic, OAuth, and RFC 8693 token exchange. Renders:
+  - `AgentgatewayBackend` — single target pointing at muster's aggregator endpoint with
+    `auth.passthrough` (token forwarded to muster unchanged; muster is the enforcement point).
+  - `HTTPRoute` — connects the agentgateway data-plane Gateway to the Backend.
+  - `HTTPRoute` (`-prm`) — proxies `agentgateway-host/.well-known/oauth-protected-resource[/mcp]`
+    to the muster Service using a standard `gateway.networking.k8s.io HTTPRoute` (no Envoy-specific
+    extensions). muster serves the correct doc because `muster.oauth.server.resourceIdentifier`
+    is set to the agentgateway hostname in shared-configs.
+  - Public ingress `HTTPRoute` and `BackendTrafficPolicy` are owned by the `agentic-platform`
+    umbrella chart (`gateway.httpRoute` / `gateway.backendTrafficPolicy`), not this chart.
+- `agentgateway.oauthMode` (`passthrough` | `validate`, default `passthrough`):
+  - `passthrough` — agentgateway forwards tokens to muster without validating them. muster is
+    the sole enforcement point. The well-known shim is served regardless.
+  - `validate` — additionally renders an `AgentgatewayPolicy` with generic
+    `jwtAuthentication.providers[]` (any OIDC issuer; no Auth0/Keycloak preset required).
+    agentgateway validates the inbound token at the edge before forwarding to muster. muster
+    still validates as a second layer. Token exchange is unaffected: agentgateway only sees
+    the inbound user token; muster performs all downstream RFC 8693 exchanges internally.
+    Requires `agentgateway.jwt.*` and a `ReferenceGrant` in `jwksBackendRef.namespace`
+    (platform prerequisite, not rendered by this chart).
+
 ## [0.1.0] - 2026-05-29
 
 ### Added

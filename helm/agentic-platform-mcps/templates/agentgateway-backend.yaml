@@ -7,6 +7,28 @@ metadata:
   labels:
     {{- include "labels.common" . | nindent 4 }}
 spec:
+  {{- if .Values.agentgateway.viaMuster }}
+  {{- $url := required "agentgateway.viaMuster: true requires agentgateway.musterUrl (muster's aggregator MCP endpoint)" .Values.agentgateway.musterUrl }}
+  # Front muster: a SINGLE target pointing at muster's aggregator MCP endpoint.
+  # muster fans out to every server and runs all per-server auth / exchange; the
+  # verified inbound token is forwarded so muster sees the caller's identity.
+  mcp:
+    targets:
+      - name: muster
+        static:
+          host: {{ include "mcp.host" $url | quote }}
+          port: {{ include "mcp.port" $url }}
+          path: {{ include "mcp.path" $url | quote }}
+          protocol: StreamableHTTP
+          policies:
+            {{- if hasPrefix "https://" $url }}
+            # https aggregator endpoint -> initiate TLS (system CAs, SNI from host).
+            tls: {}
+            {{- end }}
+            # forward the verified inbound token to muster.
+            auth:
+              passthrough: {}
+  {{- else }}
   # One multiplexed MCP backend federating every server behind a single endpoint
   # (mirrors muster's aggregation role; avoids one /mcp route per server).
   mcp:
@@ -34,4 +56,5 @@ spec:
             {{- end }}
           {{- end }}
       {{- end }}
+  {{- end }}
 {{- end }}

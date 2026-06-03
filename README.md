@@ -48,8 +48,10 @@ There are several ways to install this app onto a workload cluster.
 |------------------------|---------|------------------------------------------------------------------------|
 | `muster.enabled`       | `true`  | Render `MCPServer` CRs.                                                 |
 | `agentgateway.enabled` | `false` | Render `AgentgatewayBackend` + per-target exchange `AgentgatewayPolicy`. |
+| `agentgateway.viaMuster` | `false` | Front muster: render a single backend target → muster's aggregator (`agentgateway.musterUrl`) instead of per-server targets. Requires `muster.enabled: true`. |
 
-Both may be `true` during the muster → agentgateway migration.
+Both `muster.enabled` and `agentgateway.enabled` may be `true` during the muster → agentgateway
+migration.
 
 ### Input contract
 
@@ -164,6 +166,34 @@ audience/JWT validation is the deployer's responsibility.
 
 > All agentgateway CR shapes above are validated server-side against the live `agentgateway.dev`
 > CRDs on a management cluster (a management cluster).
+
+### Fronting muster (`agentgateway.viaMuster: true`)
+
+By default agentgateway connects to each MCP server directly (one target per `mcpServers` entry,
+above). Setting `agentgateway.viaMuster: true` instead points agentgateway at **muster's
+aggregator MCP endpoint as a single backend target**, so traffic flows
+`client → agentgateway → muster → servers`:
+
+```yaml
+muster:
+  enabled: true          # muster must be running to be fronted
+agentgateway:
+  enabled: true
+  viaMuster: true
+  musterUrl: http://agentic-platform-muster.agentic-platform.svc.cluster.local:8090/mcp
+```
+
+- The `AgentgatewayBackend` gets exactly one target (`muster`), parsed from `musterUrl`. An
+  `https://` endpoint gets `static.policies.tls: {}`; the verified inbound token is forwarded to
+  muster via `static.policies.auth.passthrough`.
+- muster keeps doing all of the per-server work — connection, OAuth, RFC 8693 token exchange,
+  family aggregation — driven by the same `mcpServers` list (its `MCPServer` CRs are unchanged).
+- **No** per-target `AgentgatewayPolicy` and **no** `tokenExchange` broker are rendered in this
+  mode: there are no per-server targets to attach them to, and muster owns exchange downstream.
+- The win is observability: agentgateway becomes the single MCP choke point, so every tool call is
+  visible to the gateway's metrics / traces / access logs. Wiring up that telemetry export
+  (OTEL/metrics endpoints) is the agentgateway deployer's responsibility — out of this chart's
+  scope, like the `Gateway` / `HTTPRoute` — this chart only provides the topology.
 
 ### CRDs
 

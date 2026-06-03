@@ -1,4 +1,6 @@
-{{- if .Values.agentgateway.enabled }}
+{{- /* viaMuster fronts muster, which owns all downstream exchange — no per-target
+       exchange policies are rendered (there are no per-server targets to attach to). */}}
+{{- if and .Values.agentgateway.enabled (not .Values.agentgateway.viaMuster) }}
 {{- $root := . }}
 {{- $broker := .Values.agentgateway.tokenExchange.broker }}
 {{- /*

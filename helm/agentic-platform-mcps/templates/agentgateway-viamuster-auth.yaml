@@ -1,0 +1,35 @@
+{{- if and .Values.agentgateway.enabled .Values.agentgateway.viaMuster }}
+{{- if eq .Values.agentgateway.oauthMode "validate" }}
+{{- $jwt := .Values.agentgateway.jwt }}
+{{- $issuer := required "agentgateway.oauthMode=validate requires agentgateway.jwt.issuer" $jwt.issuer }}
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayPolicy
+metadata:
+  name: {{ include "name" . }}-auth
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "labels.common" . | nindent 4 }}
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: {{ .Values.agentgateway.gateway.name | quote }}
+  traffic:
+    jwtAuthentication:
+      providers:
+        - issuer: {{ $issuer | quote }}
+          jwks:
+            remote:
+              backendRef:
+                name: {{ $jwt.jwksBackendRef.name | quote }}
+                namespace: {{ $jwt.jwksBackendRef.namespace | quote }}
+                port: {{ $jwt.jwksBackendRef.port }}
+              jwksPath: {{ $jwt.jwksPath | quote }}
+          {{- with $jwt.audiences }}
+          audiences:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+{{- else if ne .Values.agentgateway.oauthMode "passthrough" }}
+{{- fail (printf "agentgateway.oauthMode must be 'validate' or 'passthrough', got %q" .Values.agentgateway.oauthMode) }}
+{{- end }}
+{{- end }}
