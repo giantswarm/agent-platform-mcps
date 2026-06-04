@@ -52,10 +52,9 @@ agentgateway:
   # validate: additionally renders an AgentgatewayPolicy with jwtAuthentication
   #   pointing at the JWKS endpoint. agentgateway validates the inbound token at
   #   the edge before forwarding. muster still validates downstream (defence in depth).
-  #   BLOCKER: agentgateway's jwtAuthentication without an mcp.provider preset does
-  #   not emit the MCP-specific WWW-Authenticate challenge, breaking OAuth bootstrap.
-  #   Requires muster PR #757 + enableJWTMode: true so agentgateway can validate
-  #   against muster's own JWKS.
+  #   Requires muster enableJWTMode: true and a jwt-signing-key in the cluster secret.
+  #   agentgateway v1.2.1+ serves /.well-known/oauth-protected-resource and emits
+  #   WWW-Authenticate without a provider preset — no blocker.
   oauthMode: passthrough  # @schema enum: [validate, passthrough]
   # -- JWT validation config — only used when oauthMode: validate.
   # agentgateway fetches the JWKS from the named Kubernetes Service to verify
