@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `values.schema.json` no longer rejects every `identityProviders` entry. The schema declared
+  `identityProviders` as an object with `additionalProperties: false` and no properties, so any
+  populated map failed validation (`helm install`/`ct lint`) and `auth.mode: exchange` was
+  impossible to configure. `identityProviders` now carries a per-provider value schema
+  (`tokenEndpoint` required; `connectorId`, `scopes`, `credentialsSecret` optional).
+
 ## [0.2.0] - 2026-06-03
 
 ### Added
