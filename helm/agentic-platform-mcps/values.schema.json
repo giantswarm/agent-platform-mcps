@@ -138,7 +138,42 @@
         "identityProviders": {
             "description": "Identity providers, defined once and referenced by servers via auth.provider. Multiple servers on the same cluster share one entry instead of repeating token-exchange config.  Example: cluster-b: tokenEndpoint: https://dex.cluster-b.example.com/token connectorId: giantswarm-simple-oidc scopes: openid profile email groups credentialsSecret: name: cluster-b-token-exchange-credentials namespace: muster        # optional; defaults to the release namespace clientIdKey: client-id clientSecretKey: client-secret",
             "type": "object",
-            "additionalProperties": false
+            "additionalProperties": {
+                "type": "object",
+                "required": [
+                    "tokenEndpoint"
+                ],
+                "properties": {
+                    "connectorId": {
+                        "type": "string"
+                    },
+                    "credentialsSecret": {
+                        "type": "object",
+                        "properties": {
+                            "clientIdKey": {
+                                "type": "string"
+                            },
+                            "clientSecretKey": {
+                                "type": "string"
+                            },
+                            "name": {
+                                "type": "string"
+                            },
+                            "namespace": {
+                                "type": "string"
+                            }
+                        },
+                        "additionalProperties": false
+                    },
+                    "scopes": {
+                        "type": "string"
+                    },
+                    "tokenEndpoint": {
+                        "type": "string"
+                    }
+                },
+                "additionalProperties": false
+            }
         },
         "mcpServers": {
             "description": "Flat list of MCP servers. Required fields per entry: cluster, group, url.  Example entries: # Same-cluster server, token forwarded as-is: - cluster: graveler group: kubernetes url: https://mcp-kubernetes.graveler.example.com/mcp auth: mode: forward  # Remote cluster server, RFC 8693 token exchange via identityProviders: - cluster: gazelle group: kubernetes url: https://mcp-kubernetes.gazelle.example.com/mcp auth: mode: exchange provider: gazelle          # ref into identityProviders above  # Unauthenticated server: - cluster: graveler group: prometheus url: https://mcp-prometheus.graveler.example.com/mcp auth: mode: none",

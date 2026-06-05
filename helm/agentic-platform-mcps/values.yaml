@@ -102,6 +102,7 @@ defaults:
   audiences:
     - dex-k8s-authenticator
 
+# @schema additionalProperties: {type: object, additionalProperties: false, required: [tokenEndpoint], properties: {tokenEndpoint: {type: string}, connectorId: {type: string}, scopes: {type: string}, credentialsSecret: {type: object, additionalProperties: false, properties: {name: {type: string}, namespace: {type: string}, clientIdKey: {type: string}, clientSecretKey: {type: string}}}}}
 # -- Identity providers, defined once and referenced by servers via auth.provider.
 # Multiple servers on the same cluster share one entry instead of repeating
 # token-exchange config.
