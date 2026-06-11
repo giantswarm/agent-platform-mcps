@@ -29,6 +29,9 @@ spec:
           audiences:
             {{- toYaml . | nindent 12 }}
           {{- end }}
+        {{- with $jwt.extraProviders }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
 {{- else if ne .Values.agentgateway.oauthMode "passthrough" }}
 {{- fail (printf "agentgateway.oauthMode must be 'validate' or 'passthrough', got %q" .Values.agentgateway.oauthMode) }}
 {{- end }}
