@@ -15,7 +15,7 @@ home: https://github.com/giantswarm/agentic-platform-mcps
 icon: https://s.giantswarm.io/app-icons/giantswarm/1/light.svg
 sources:
   - https://github.com/giantswarm/agentic-platform-mcps
-version: 0.2.0
+version: 0.3.0
 annotations:
   # Adapt to 'giantswarm' if this application is not to be deployed by customers
   io.giantswarm.application.audience: giantswarm
