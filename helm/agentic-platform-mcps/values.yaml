@@ -80,6 +80,21 @@ agentgateway:
     # server's expected audience when using Dex directly.
     audiences:
       - dex-k8s-authenticator
+    # -- Additional JWT providers, rendered verbatim into the
+    # jwtAuthentication providers list after the primary provider above.
+    # Use to accept tokens from a second issuer at the edge, e.g. Dex-issued
+    # ID tokens forwarded by Backstage AI chat alongside muster-issued JWTs.
+    # Cross-namespace jwks backendRefs require a ReferenceGrant in the target
+    # namespace (kind AgentgatewayPolicy, group agentgateway.dev).
+    # Example:
+    #   extraProviders:
+    #     - issuer: https://dex.<codename>.<base>
+    #       audiences: [<backstage-dex-client-id>]
+    #       jwks:
+    #         remote:
+    #           backendRef: {name: dex, namespace: giantswarm, port: 5556}
+    #           jwksPath: /keys
+    extraProviders: []
   # -- Outbound token-exchange broker for auth.mode=exchange servers.
   # One AgentgatewayPolicy per exchange target is rendered, delegating
   # cross-cluster token exchange to this ext_authz service. Not used when

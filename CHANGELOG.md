@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `agentgateway.jwt.extraProviders` — additional JWT providers for the inbound
+  `jwtAuthentication` policy (oauthMode `validate`), rendered after the primary provider.
+  Lets the gateway accept tokens from a second issuer at the edge, e.g. Dex-issued ID
+  tokens forwarded by Backstage AI chat alongside muster-issued JWTs (giantswarm#36840).
+  Cross-namespace `jwks` backendRefs require a ReferenceGrant in the target namespace.
+
 ### Fixed
 
 - `values.schema.json` no longer rejects every `identityProviders` entry. The schema declared
