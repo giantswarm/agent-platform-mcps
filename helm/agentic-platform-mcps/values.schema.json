@@ -31,6 +31,10 @@
                                 "type": "string"
                             }
                         },
+                        "extraProviders": {
+                            "description": "Additional JWT providers, rendered verbatim into the jwtAuthentication providers list after the primary provider above. Use to accept tokens from a second issuer at the edge, e.g. Dex-issued ID tokens forwarded by Backstage AI chat alongside muster-issued JWTs. Cross-namespace jwks backendRefs require a ReferenceGrant in the target namespace (kind AgentgatewayPolicy, group agentgateway.dev). Example: extraProviders: - issuer: https://dex.\u003ccodename\u003e.\u003cbase\u003e audiences: [\u003cbackstage-dex-client-id\u003e] jwks: remote: backendRef: {name: dex, namespace: giantswarm, port: 5556} jwksPath: /keys",
+                            "type": "array"
+                        },
                         "issuer": {
                             "description": "OIDC issuer URL. Must match the `iss` claim in inbound tokens. With muster JWT mode: https://muster.\u003ccodename\u003e.\u003cbase\u003e With Dex direct:      https://dex.\u003ccodename\u003e.\u003cbase\u003e",
                             "type": "string"

@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-06-11
+
+### Added
+
+- `agentgateway.jwt.extraProviders` — additional JWT providers for the inbound
+  `jwtAuthentication` policy (oauthMode `validate`), rendered after the primary provider.
+  Lets the gateway accept tokens from a second issuer at the edge, e.g. Dex-issued ID
+  tokens forwarded by Backstage AI chat alongside muster-issued JWTs (giantswarm#36840).
+  Cross-namespace `jwks` backendRefs require a ReferenceGrant in the target namespace.
+
 ### Fixed
 
 - `values.schema.json` no longer rejects every `identityProviders` entry. The schema declared
@@ -66,6 +76,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `Gateway`, `HTTPRoute` (routing) and inbound caller (JWT) validation are owned by the
   agentgateway deployer, not this chart — it emits no resource that references a `Gateway`.
 
-[Unreleased]: https://github.com/giantswarm/agentic-platform-mcps/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/giantswarm/agentic-platform-mcps/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/giantswarm/agentic-platform-mcps/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/giantswarm/agentic-platform-mcps/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/giantswarm/agentic-platform-mcps/releases/tag/v0.1.0
