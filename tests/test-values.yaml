@@ -1,0 +1,5 @@
+# Values for the ATS smoke test (see .ats/main.yaml). Empty: the chart's
+# defaults render no resources (the mcpServers list is empty), so the smoke
+# test confirms the chart installs cleanly on a kind cluster. Populate
+# mcpServers here once the muster/agentgateway CRDs are available in the test
+# cluster, to exercise the rendered CRs.
