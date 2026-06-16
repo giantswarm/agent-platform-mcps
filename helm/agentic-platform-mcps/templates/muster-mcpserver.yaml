@@ -45,6 +45,9 @@ spec:
     tokenExchange:
       enabled: true
       dexTokenEndpoint: {{ $p.tokenEndpoint }}
+      {{- with $p.expectedIssuer }}
+      expectedIssuer: {{ . }}
+      {{- end }}
       {{- with $p.connectorId }}
       connectorId: {{ . }}
       {{- end }}
