@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `identityProviders.<name>.expectedIssuer` — pins the `iss` claim of the RFC 8693
+  exchanged token, rendered into the muster MCPServer `tokenExchange.expectedIssuer`.
+  Required when `tokenEndpoint` points at a transport-only proxy (e.g. a tunnelport
+  `:8443` in-cluster Service) whose URL differs from the remote Dex issuer: the minted
+  token still carries the public Dex issuer, so muster must be told what to expect.
+  Lets gazelle repoint its tunneled MCP servers to private clusters purely through
+  sub-chart values instead of raw `MCPServer` CRs (giantswarm#36883).
+
 ## [0.3.0] - 2026-06-11
 
 ### Added
