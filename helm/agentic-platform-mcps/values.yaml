@@ -50,8 +50,9 @@ agentgateway:
   #   without inspecting them. muster is the sole enforcement point.
   #
   # validate: additionally renders an AgentgatewayPolicy with jwtAuthentication
-  #   pointing at the JWKS endpoint. agentgateway validates the inbound token at
-  #   the edge before forwarding. muster still validates downstream (defence in depth).
+  #   pointing at the JWKS endpoint, attached to this chart's MCP HTTPRoute (not the
+  #   shared Gateway, which also carries other charts' routes). agentgateway validates
+  #   the inbound token before forwarding. muster still validates downstream (defence in depth).
   #   Requires muster enableJWTMode: true and a jwt-signing-key in the cluster secret.
   #   agentgateway v1.2.1+ serves /.well-known/oauth-protected-resource and emits
   #   WWW-Authenticate without a provider preset — no blocker.
