@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-06-18
+
+### Fixed
+
+- `oauthMode: validate` now attaches the inbound JWT `AgentgatewayPolicy` to this
+  chart's MCP `HTTPRoute` instead of the shared agentgateway `Gateway`. Targeting the
+  Gateway applied `Strict` JWT validation to every route on it, including routes owned
+  by other charts (e.g. klaus, which serves the Slack events webhook that authenticates
+  by signature, not JWT), returning 401 on traffic that should never have been gated.
+
 ## [0.4.0] - 2026-06-16
 
 ### Added
