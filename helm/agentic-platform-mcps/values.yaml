@@ -167,4 +167,15 @@ identityProviders: {}
 #     url: https://mcp-prometheus.graveler.example.com/mcp
 #     auth:
 #       mode: none
+#
+#   # muster-minted token (localMint): muster validates the caller's token and
+#   # mints a new JWT signed with muster's key for the given audience. Requires
+#   # muster OAuth server to run in JWT mode and a matching workloadGroupGrant or
+#   # workloadAudiences entry in the broker config.
+#   - cluster: glean
+#     group: kubernetes
+#     url: https://mcp-kubernetes.glean.example.com/mcp
+#     auth:
+#       mode: localMint
+#       audience: mcp-kubernetes
 mcpServers: []
