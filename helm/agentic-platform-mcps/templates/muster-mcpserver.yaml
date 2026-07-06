@@ -61,14 +61,8 @@ spec:
         clientIdKey: {{ .clientIdKey }}
         clientSecretKey: {{ .clientSecretKey }}
       {{- end }}
-    {{- else if eq $mode "localMint" }}
-    type: oauth
-    forwardToken: false
-    localMint:
-      enabled: true
-      audience: {{ required (printf "mcpServers entry %q: auth.audience is required for mode=localMint" (include "mcp.serverName" .)) $auth.audience }}
     {{- else }}
-    {{- fail (printf "mcpServers entry %q: unknown auth.mode %q (want none|oauth|forward|exchange|localMint)" (include "mcp.serverName" .) $mode) }}
+    {{- fail (printf "mcpServers entry %q: unknown auth.mode %q (want none|oauth|forward|exchange)" (include "mcp.serverName" .) $mode) }}
     {{- end }}
     {{- with $audiences }}
     requiredAudiences:
