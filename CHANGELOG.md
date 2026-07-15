@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
-- The `localMint` value for `mcpServers[].auth.mode` (and its `auth.audience` key). muster removes the `auth.localMint` MCPServer CRD field (giantswarm/muster#947), so the mode would render CRs the admission webhook rejects. Entries using it switch to `mode: forward`: muster forwards the validated caller token unchanged and the backend validates it against muster's JWKS via its `trustedIssuers` config. The audience the backend must accept is muster's `resourceIdentifier`; set `auth.audiences` (or `defaults.audiences`) accordingly.
+- The `localMint` value for `mcpServers[].auth.mode` (and its `auth.audience` key). muster removes the `auth.localMint` MCPServer CRD field (giantswarm/muster#947), so the mode would render CRs the admission webhook rejects. Entries using it switch to `mode: forward` (muster forwards the Dex-issued token unchanged and the backend validates it against Dex's JWKS) or `mode: exchange` (RFC 8693 at the backend's Dex). muster never signs tokens and no backend trusts a muster issuer.
 
 ## [0.5.0] - 2026-06-18
 

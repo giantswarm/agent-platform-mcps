@@ -21,22 +21,22 @@
                     "additionalProperties": false
                 },
                 "jwt": {
-                    "description": "JWT validation config — only used when oauthMode: validate. agentgateway fetches the JWKS from the named Kubernetes Service to verify inbound tokens locally (cached after first fetch; no per-request network call). With muster JWT mode (enableJWTMode: true), point this at muster's own JWKS (name: agentic-platform-muster, namespace: agentic-platform, port: 8090, jwksPath: /.well-known/jwks.json) — same namespace, no ReferenceGrant needed.",
+                    "description": "JWT validation config — only used when oauthMode: validate. agentgateway fetches the JWKS from the named Kubernetes Service to verify inbound tokens locally (cached after first fetch; no per-request network call). Points at Dex, the token issuer (muster never signs tokens).",
                     "type": "object",
                     "properties": {
                         "audiences": {
-                            "description": "Expected `aud` claim values. Must match muster's resourceIdentifier (agentgateway-host/mcp) when using muster JWT mode, or the downstream server's expected audience when using Dex directly.",
+                            "description": "Expected `aud` claim values. The downstream server's expected audience (e.g. dex-k8s-authenticator).",
                             "type": "array",
                             "items": {
                                 "type": "string"
                             }
                         },
                         "extraProviders": {
-                            "description": "Additional JWT providers, rendered verbatim into the jwtAuthentication providers list after the primary provider above. Use to accept tokens from a second issuer at the edge, e.g. Dex-issued ID tokens forwarded by Backstage AI chat alongside muster-issued JWTs. Cross-namespace jwks backendRefs require a ReferenceGrant in the target namespace (kind AgentgatewayPolicy, group agentgateway.dev). Example: extraProviders: - issuer: https://dex.\u003ccodename\u003e.\u003cbase\u003e audiences: [\u003cbackstage-dex-client-id\u003e] jwks: remote: backendRef: {name: dex, namespace: giantswarm, port: 5556} jwksPath: /keys",
+                            "description": "Additional JWT providers, rendered verbatim into the jwtAuthentication providers list after the primary provider above. Use to accept tokens from a second issuer at the edge, e.g. Dex ID tokens from a different connector alongside the primary Dex provider. Cross-namespace jwks backendRefs require a ReferenceGrant in the target namespace (kind AgentgatewayPolicy, group agentgateway.dev). Example: extraProviders: - issuer: https://dex.\u003ccodename\u003e.\u003cbase\u003e audiences: [\u003cbackstage-dex-client-id\u003e] jwks: remote: backendRef: {name: dex, namespace: giantswarm, port: 5556} jwksPath: /keys",
                             "type": "array"
                         },
                         "issuer": {
-                            "description": "OIDC issuer URL. Must match the `iss` claim in inbound tokens. With muster JWT mode: https://muster.\u003ccodename\u003e.\u003cbase\u003e With Dex direct:      https://dex.\u003ccodename\u003e.\u003cbase\u003e",
+                            "description": "OIDC issuer URL. Must match the `iss` claim in inbound tokens. Dex: https://dex.\u003ccodename\u003e.\u003cbase\u003e",
                             "type": "string"
                         },
                         "jwksBackendRef": {
@@ -56,7 +56,7 @@
                             "additionalProperties": false
                         },
                         "jwksPath": {
-                            "description": "Path on the JWKS Service where public keys are served. Dex: /keys   |   muster JWT mode: /.well-known/jwks.json",
+                            "description": "Path on the JWKS Service where public keys are served. Dex: /keys",
                             "type": "string"
                         }
                     },
@@ -67,7 +67,7 @@
                     "type": "string"
                 },
                 "oauthMode": {
-                    "description": "OAuth discovery and edge validation mode.  muster serves all OAuth discovery paths natively (/.well-known/oauth-protected-resource, /.well-known/oauth-authorization-server, etc.) because clients dial the muster hostname directly. No proxy HTTPRoute is needed.  passthrough (current default): agentgateway forwards all tokens to muster without inspecting them. muster is the sole enforcement point.  validate: additionally renders an AgentgatewayPolicy with jwtAuthentication pointing at the JWKS endpoint, attached to this chart's MCP HTTPRoute (not the shared Gateway, which also carries other charts' routes). agentgateway validates the inbound token before forwarding. muster still validates downstream (defence in depth). Requires muster enableJWTMode: true and a jwt-signing-key in the cluster secret. agentgateway v1.2.1+ serves /.well-known/oauth-protected-resource and emits WWW-Authenticate without a provider preset — no blocker.",
+                    "description": "OAuth discovery and edge validation mode.  muster serves all OAuth discovery paths natively (/.well-known/oauth-protected-resource, /.well-known/oauth-authorization-server, etc.) because clients dial the muster hostname directly. No proxy HTTPRoute is needed.  passthrough (current default): agentgateway forwards all tokens to muster without inspecting them. muster is the sole enforcement point.  validate: additionally renders an AgentgatewayPolicy with jwtAuthentication pointing at the JWKS endpoint, attached to this chart's MCP HTTPRoute (not the shared Gateway, which also carries other charts' routes). agentgateway validates the inbound token before forwarding. muster still validates downstream (defence in depth). Validates against Dex's JWKS (the token issuer); muster never signs tokens. agentgateway v1.2.1+ serves /.well-known/oauth-protected-resource and emits WWW-Authenticate without a provider preset — no blocker.",
                     "type": "string",
                     "enum": [
                         "validate",
@@ -183,7 +183,7 @@
             }
         },
         "mcpServers": {
-            "description": "Flat list of MCP servers. Required fields per entry: cluster, group, url.  Example entries: # Same-cluster server, token forwarded as-is. This covers muster-issued # tokens too (human logins and agent on-behalf-of tokens): the backend # validates them against muster's JWKS via its trustedIssuers config. - cluster: graveler group: kubernetes url: https://mcp-kubernetes.graveler.example.com/mcp auth: mode: forward  # Remote cluster server, RFC 8693 token exchange via identityProviders: - cluster: gazelle group: kubernetes url: https://mcp-kubernetes.gazelle.example.com/mcp auth: mode: exchange provider: gazelle          # ref into identityProviders above  # Unauthenticated server: - cluster: graveler group: prometheus url: https://mcp-prometheus.graveler.example.com/mcp auth: mode: none",
+            "description": "Flat list of MCP servers. Required fields per entry: cluster, group, url.  Example entries: # Same-cluster server, the Dex token forwarded as-is. The backend # validates it against Dex's JWKS; muster is not an issuer. - cluster: graveler group: kubernetes url: https://mcp-kubernetes.graveler.example.com/mcp auth: mode: forward  # Remote cluster server, RFC 8693 token exchange via identityProviders: - cluster: gazelle group: kubernetes url: https://mcp-kubernetes.gazelle.example.com/mcp auth: mode: exchange provider: gazelle          # ref into identityProviders above  # Unauthenticated server: - cluster: graveler group: prometheus url: https://mcp-prometheus.graveler.example.com/mcp auth: mode: none",
             "type": "array"
         },
         "muster": {
