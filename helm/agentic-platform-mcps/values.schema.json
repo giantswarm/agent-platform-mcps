@@ -1,47 +1,51 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "type": "object",
+    "additionalProperties": false,
     "properties": {
         "agentgateway": {
-            "description": "Render agentgateway CRs for the via-muster topology. When viaMuster is true the traffic flow is: client → agentgateway → muster → N MCP servers agentgateway becomes the single MCP choke point for observability (per-call metrics, traces, access logs). muster keeps all per-server connection logic, OAuth, and RFC 8693 token exchange.",
             "type": "object",
+            "description": "Render agentgateway CRs for the via-muster topology. When viaMuster is true the traffic flow is: client → agentgateway → muster → N MCP servers agentgateway becomes the single MCP choke point for observability (per-call metrics, traces, access logs). muster keeps all per-server connection logic, OAuth, and RFC 8693 token exchange.",
+            "additionalProperties": false,
             "properties": {
                 "enabled": {
-                    "description": "Enable agentgateway CR rendering.",
-                    "type": "boolean"
+                    "type": "boolean",
+                    "description": "Enable agentgateway CR rendering."
                 },
                 "gateway": {
-                    "description": "Name of the agentgateway data-plane Gateway CR in the release namespace. An HTTPRoute is rendered on this Gateway connecting it to the AgentgatewayBackend. The public ingress HTTPRoute (cluster ingress → agentgateway Service) is owned by the agentic-platform umbrella chart (gateway.httpRoute).",
                     "type": "object",
+                    "description": "Name of the agentgateway data-plane Gateway CR in the release namespace. An HTTPRoute is rendered on this Gateway connecting it to the AgentgatewayBackend. The public ingress HTTPRoute (cluster ingress → agentgateway Service) is owned by the agentic-platform umbrella chart (gateway.httpRoute).",
+                    "additionalProperties": false,
                     "properties": {
                         "name": {
                             "type": "string"
                         }
-                    },
-                    "additionalProperties": false
+                    }
                 },
                 "jwt": {
-                    "description": "JWT validation config — only used when oauthMode: validate. agentgateway fetches the JWKS from the named Kubernetes Service to verify inbound tokens locally (cached after first fetch; no per-request network call). Points at Dex, the token issuer (muster never signs tokens).",
                     "type": "object",
+                    "description": "JWT validation config — only used when oauthMode: validate. agentgateway fetches the JWKS from the named Kubernetes Service to verify inbound tokens locally (cached after first fetch; no per-request network call). Points at Dex, the token issuer (muster never signs tokens).",
+                    "additionalProperties": false,
                     "properties": {
                         "audiences": {
-                            "description": "Expected `aud` claim values. The downstream server's expected audience (e.g. dex-k8s-authenticator).",
                             "type": "array",
+                            "description": "Expected `aud` claim values. The downstream server's expected audience (e.g. dex-k8s-authenticator).",
                             "items": {
                                 "type": "string"
                             }
                         },
                         "extraProviders": {
-                            "description": "Additional JWT providers, rendered verbatim into the jwtAuthentication providers list after the primary provider above. Use to accept tokens from a second issuer at the edge, e.g. Dex ID tokens from a different connector alongside the primary Dex provider. Cross-namespace jwks backendRefs require a ReferenceGrant in the target namespace (kind AgentgatewayPolicy, group agentgateway.dev). Example: extraProviders: - issuer: https://dex.\u003ccodename\u003e.\u003cbase\u003e audiences: [\u003cbackstage-dex-client-id\u003e] jwks: remote: backendRef: {name: dex, namespace: giantswarm, port: 5556} jwksPath: /keys",
-                            "type": "array"
+                            "type": "array",
+                            "description": "Additional JWT providers, rendered verbatim into the jwtAuthentication providers list after the primary provider above. Use to accept tokens from a second issuer at the edge, e.g. Dex ID tokens from a different connector alongside the primary Dex provider. Cross-namespace jwks backendRefs require a ReferenceGrant in the target namespace (kind AgentgatewayPolicy, group agentgateway.dev). Example: extraProviders: - issuer: https://dex.<codename>.<base> audiences: [<backstage-dex-client-id>] jwks: remote: backendRef: {name: dex, namespace: giantswarm, port: 5556} jwksPath: /keys"
                         },
                         "issuer": {
-                            "description": "OIDC issuer URL. Must match the `iss` claim in inbound tokens. Dex: https://dex.\u003ccodename\u003e.\u003cbase\u003e",
-                            "type": "string"
+                            "type": "string",
+                            "description": "OIDC issuer URL. Must match the `iss` claim in inbound tokens. Dex: https://dex.<codename>.<base>"
                         },
                         "jwksBackendRef": {
-                            "description": "Kubernetes Service reference for the JWKS endpoint.",
                             "type": "object",
+                            "description": "Kubernetes Service reference for the JWKS endpoint.",
+                            "additionalProperties": false,
                             "properties": {
                                 "name": {
                                     "type": "string"
@@ -52,34 +56,34 @@
                                 "port": {
                                     "type": "integer"
                                 }
-                            },
-                            "additionalProperties": false
+                            }
                         },
                         "jwksPath": {
-                            "description": "Path on the JWKS Service where public keys are served. Dex: /keys",
-                            "type": "string"
+                            "type": "string",
+                            "description": "Path on the JWKS Service where public keys are served. Dex: /keys"
                         }
-                    },
-                    "additionalProperties": false
+                    }
                 },
                 "musterUrl": {
-                    "description": "In-cluster muster aggregator endpoint. Required when viaMuster: true. Typically http://\u003crelease\u003e-muster.\u003cnamespace\u003e.svc.cluster.local:8090/mcp",
-                    "type": "string"
+                    "type": "string",
+                    "description": "In-cluster muster aggregator endpoint. Required when viaMuster: true. Typically http://<release>-muster.<namespace>.svc.cluster.local:8090/mcp"
                 },
                 "oauthMode": {
-                    "description": "OAuth discovery and edge validation mode.  muster serves all OAuth discovery paths natively (/.well-known/oauth-protected-resource, /.well-known/oauth-authorization-server, etc.) because clients dial the muster hostname directly. No proxy HTTPRoute is needed.  passthrough (current default): agentgateway forwards all tokens to muster without inspecting them. muster is the sole enforcement point.  validate: additionally renders an AgentgatewayPolicy with jwtAuthentication pointing at the JWKS endpoint, attached to this chart's MCP HTTPRoute (not the shared Gateway, which also carries other charts' routes). agentgateway validates the inbound token before forwarding. muster still validates downstream (defence in depth). Validates against Dex's JWKS (the token issuer); muster never signs tokens. agentgateway v1.2.1+ serves /.well-known/oauth-protected-resource and emits WWW-Authenticate without a provider preset — no blocker.",
                     "type": "string",
+                    "description": "OAuth discovery and edge validation mode.  muster serves all OAuth discovery paths natively (/.well-known/oauth-protected-resource, /.well-known/oauth-authorization-server, etc.) because clients dial the muster hostname directly. No proxy HTTPRoute is needed.  passthrough (current default): agentgateway forwards all tokens to muster without inspecting them. muster is the sole enforcement point.  validate: additionally renders an AgentgatewayPolicy with jwtAuthentication pointing at the JWKS endpoint, attached to this chart's MCP HTTPRoute (not the shared Gateway, which also carries other charts' routes). agentgateway validates the inbound token before forwarding. muster still validates downstream (defence in depth). Validates against Dex's JWKS (the token issuer); muster never signs tokens. agentgateway v1.2.1+ serves /.well-known/oauth-protected-resource and emits WWW-Authenticate without a provider preset — no blocker.",
                     "enum": [
                         "validate",
                         "passthrough"
                     ]
                 },
                 "tokenExchange": {
-                    "description": "Outbound token-exchange broker for auth.mode=exchange servers. One AgentgatewayPolicy per exchange target is rendered, delegating cross-cluster token exchange to this ext_authz service. Not used when viaMuster: true (muster handles all exchange internally).",
                     "type": "object",
+                    "description": "Outbound token-exchange broker for auth.mode=exchange servers. One AgentgatewayPolicy per exchange target is rendered, delegating cross-cluster token exchange to this ext_authz service. Not used when viaMuster: true (muster handles all exchange internally).",
+                    "additionalProperties": false,
                     "properties": {
                         "broker": {
                             "type": "object",
+                            "additionalProperties": false,
                             "properties": {
                                 "kind": {
                                     "type": "string"
@@ -96,63 +100,62 @@
                                 "protocol": {
                                     "type": "string"
                                 }
-                            },
-                            "additionalProperties": false
+                            }
                         }
-                    },
-                    "additionalProperties": false
+                    }
                 },
                 "viaMuster": {
-                    "description": "Route all MCP traffic through muster as a single backend instead of connecting agentgateway directly to each server. Requires muster.enabled: true.",
-                    "type": "boolean"
+                    "type": "boolean",
+                    "description": "Route all MCP traffic through muster as a single backend instead of connecting agentgateway directly to each server. Requires muster.enabled: true."
                 }
-            },
-            "additionalProperties": false
+            }
         },
         "defaults": {
-            "description": "Defaults applied to every mcpServers entry unless overridden per entry.",
             "type": "object",
+            "description": "Defaults applied to every mcpServers entry unless overridden per entry.",
+            "additionalProperties": false,
             "properties": {
                 "audiences": {
-                    "description": "Audiences required at the upstream for oauth-authenticated servers.",
                     "type": "array",
+                    "description": "Audiences required at the upstream for oauth-authenticated servers.",
                     "items": {
                         "type": "string"
                     }
                 },
                 "autoStart": {
-                    "description": "Start connections automatically when muster starts.",
-                    "type": "boolean"
+                    "type": "boolean",
+                    "description": "Start connections automatically when muster starts."
                 },
                 "transport": {
-                    "description": "MCP transport protocol.",
-                    "type": "string"
+                    "type": "string",
+                    "description": "MCP transport protocol."
                 }
-            },
-            "additionalProperties": false
+            }
         },
         "global": {
-            "description": "Global values shared between all subcharts",
-            "$comment": "Added automatically by 'helm schema' to allow this chart to be used as a Helm dependency, as the `additionalProperties` setting would otherwise collide with Helm's special 'global' values key.",
             "type": [
                 "object",
                 "null"
-            ]
+            ],
+            "description": "Global values shared between all subcharts",
+            "$comment": "Added automatically by 'helm schema' to allow this chart to be used as a Helm dependency, as the `additionalProperties` setting would otherwise collide with Helm's special 'global' values key."
         },
         "identityProviders": {
-            "description": "Identity providers, defined once and referenced by servers via auth.provider. Multiple servers on the same cluster share one entry instead of repeating token-exchange config.  expectedIssuer pins the `iss` claim of the exchanged token. It is required when tokenEndpoint points at a transport-only proxy (e.g. a tunnelport `:8443` in-cluster Service) whose URL differs from the remote Dex issuer: the minted token still carries the public Dex issuer, so muster must be told what to expect. When tokenEndpoint is the real public Dex URL it can be omitted (muster derives the issuer from tokenEndpoint).  Example (tunneled): cluster-b: tokenEndpoint: https://dex-cluster-b.agentic-platform.svc.cluster.local:8443/token expectedIssuer: https://dex.cluster-b.example.com connectorId: giantswarm-simple-oidc scopes: openid profile email groups credentialsSecret: name: cluster-b-token-exchange-credentials namespace: muster        # optional; defaults to the release namespace clientIdKey: client-id clientSecretKey: client-secret",
             "type": "object",
+            "description": "Identity providers, defined once and referenced by servers via auth.provider. Multiple servers on the same cluster share one entry instead of repeating token-exchange config.  expectedIssuer pins the `iss` claim of the exchanged token. It is required when tokenEndpoint points at a transport-only proxy (e.g. a tunnelport `:8443` in-cluster Service) whose URL differs from the remote Dex issuer: the minted token still carries the public Dex issuer, so muster must be told what to expect. When tokenEndpoint is the real public Dex URL it can be omitted (muster derives the issuer from tokenEndpoint).  Example (tunneled): cluster-b: tokenEndpoint: https://dex-cluster-b.agentic-platform.svc.cluster.local:8443/token expectedIssuer: https://dex.cluster-b.example.com connectorId: giantswarm-simple-oidc scopes: openid profile email groups credentialsSecret: name: cluster-b-token-exchange-credentials namespace: muster        # optional; defaults to the release namespace clientIdKey: client-id clientSecretKey: client-secret",
             "additionalProperties": {
                 "type": "object",
                 "required": [
                     "tokenEndpoint"
                 ],
+                "additionalProperties": false,
                 "properties": {
                     "connectorId": {
                         "type": "string"
                     },
                     "credentialsSecret": {
                         "type": "object",
+                        "additionalProperties": false,
                         "properties": {
                             "clientIdKey": {
                                 "type": "string"
@@ -166,8 +169,7 @@
                             "namespace": {
                                 "type": "string"
                             }
-                        },
-                        "additionalProperties": false
+                        }
                     },
                     "expectedIssuer": {
                         "type": "string"
@@ -178,50 +180,48 @@
                     "tokenEndpoint": {
                         "type": "string"
                     }
-                },
-                "additionalProperties": false
+                }
             }
         },
         "mcpServers": {
-            "description": "Flat list of MCP servers. Required fields per entry: cluster, group, url.  Example entries: # Same-cluster server, the Dex token forwarded as-is. The backend # validates it against Dex's JWKS; muster is not an issuer. - cluster: graveler group: kubernetes url: https://mcp-kubernetes.graveler.example.com/mcp auth: mode: forward  # Remote cluster server, RFC 8693 token exchange via identityProviders: - cluster: gazelle group: kubernetes url: https://mcp-kubernetes.gazelle.example.com/mcp auth: mode: exchange provider: gazelle          # ref into identityProviders above  # Unauthenticated server: - cluster: graveler group: prometheus url: https://mcp-prometheus.graveler.example.com/mcp auth: mode: none",
-            "type": "array"
+            "type": "array",
+            "description": "Flat list of MCP servers. Required fields per entry: cluster, group, url.  Example entries: # Same-cluster server, the Dex token forwarded as-is. The backend # validates it against Dex's JWKS; muster is not an issuer. - cluster: graveler group: kubernetes url: https://mcp-kubernetes.graveler.example.com/mcp auth: mode: forward  # Remote cluster server, RFC 8693 token exchange via identityProviders: - cluster: gazelle group: kubernetes url: https://mcp-kubernetes.gazelle.example.com/mcp auth: mode: exchange provider: gazelle          # ref into identityProviders above  # Unauthenticated server: - cluster: graveler group: prometheus url: https://mcp-prometheus.graveler.example.com/mcp auth: mode: none"
         },
         "muster": {
-            "description": "Render muster MCPServer CRs from the mcpServers list.",
             "type": "object",
+            "description": "Render muster MCPServer CRs from the mcpServers list.",
+            "additionalProperties": false,
             "properties": {
                 "enabled": {
-                    "description": "Enable muster MCPServer rendering.",
-                    "type": "boolean"
+                    "type": "boolean",
+                    "description": "Enable muster MCPServer rendering."
                 },
                 "families": {
-                    "description": "Groups that muster exposes as instance families. A server whose `group` is listed here gets a muster `family` block; unlisted groups are singletons.",
                     "type": "object",
+                    "description": "Groups that muster exposes as instance families. A server whose `group` is listed here gets a muster `family` block; unlisted groups are singletons.",
+                    "additionalProperties": false,
                     "properties": {
                         "kubernetes": {
                             "type": "object",
+                            "additionalProperties": false,
                             "properties": {
                                 "instanceArg": {
                                     "type": "string"
                                 }
-                            },
-                            "additionalProperties": false
+                            }
                         },
                         "prometheus": {
                             "type": "object",
+                            "additionalProperties": false,
                             "properties": {
                                 "instanceArg": {
                                     "type": "string"
                                 }
-                            },
-                            "additionalProperties": false
+                            }
                         }
-                    },
-                    "additionalProperties": false
+                    }
                 }
-            },
-            "additionalProperties": false
+            }
         }
-    },
-    "additionalProperties": false
+    }
 }
