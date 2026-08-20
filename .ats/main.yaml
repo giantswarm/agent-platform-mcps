@@ -7,7 +7,7 @@
 # that the packaged chart applies cleanly on a real cluster. functional and
 # upgrade steps are skipped (no functional tests defined yet).
 app-tests-app-config-file: tests/test-values.yaml
-app-tests-deploy-namespace: agentic-platform-mcps
+app-tests-deploy-namespace: agent-platform-mcps
 
 smoke-tests-cluster-type: kind
 

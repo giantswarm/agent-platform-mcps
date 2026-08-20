@@ -2,7 +2,7 @@
 {{- $gatewayName := required "agentgateway.viaMuster requires agentgateway.gateway.name" .Values.agentgateway.gateway.name }}
 # Route the agentgateway data-plane Gateway to the AgentgatewayBackend.
 # The public ingress HTTPRoute (cluster ingress gateway -> agentgateway Service)
-# is owned by the agentic-platform umbrella chart (gateway.httpRoute).
+# is owned by the agent-platform umbrella chart (gateway.httpRoute).
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:

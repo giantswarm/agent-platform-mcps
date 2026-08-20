@@ -27,7 +27,7 @@ repos:
         stages: [commit-msg]
         args: [--strict]
 
-  # Helm chart schema for agentic-platform-mcps: generate -> fix $ref -> normalize, as ONE hook.
+  # Helm chart schema for agent-platform-mcps: generate -> fix $ref -> normalize, as ONE hook.
   #
   # This single local hook deliberately runs the whole schema pipeline. pre-commit does
   # NOT feed hooks into each other: it runs each hook independently against the file on
@@ -69,23 +69,23 @@ repos:
   # message (a dev without the plugin would otherwise just get `unknown command "schema"`).
   - repo: local
     hooks:
-      - id: helm-schema-agentic-platform-mcps
-        name: "generate + fix + normalize helm/agentic-platform-mcps/values.schema.json"
+      - id: helm-schema-agent-platform-mcps
+        name: "generate + fix + normalize helm/agent-platform-mcps/values.schema.json"
         language: golang
         additional_dependencies: ['github.com/giantswarm/schemalint/v2@v2.6.2']
-        files: ^helm/agentic-platform-mcps/(values\.yaml|\.schema\.yaml|values\.schema\.json)$
+        files: ^helm/agent-platform-mcps/(values\.yaml|\.schema\.yaml|values\.schema\.json)$
         pass_filenames: false
         require_serial: true
         entry: sh -c
         args:
-          - 'helm plugin list | grep -q "^schema[[:space:]]" || { echo "helm schema plugin missing, install it with: helm plugin install https://github.com/losisin/helm-values-schema-json"; exit 1; }; helm schema --config helm/agentic-platform-mcps/.schema.yaml && python3 -c ''import json,sys; h=lambda o: {**{k:v for k,v in o.items() if k!="additionalProperties"},"unevaluatedProperties":False} if ("$ref" in o and o.get("additionalProperties") is False) else o; p=sys.argv[1]; f=open(p,encoding="utf-8"); d=json.load(f,object_hook=h); f.close(); f=open(p,"w",encoding="utf-8"); json.dump(d,f); f.close()'' helm/agentic-platform-mcps/values.schema.json && schemalint normalize helm/agentic-platform-mcps/values.schema.json -o helm/agentic-platform-mcps/values.schema.json --force'
+          - 'helm plugin list | grep -q "^schema[[:space:]]" || { echo "helm schema plugin missing, install it with: helm plugin install https://github.com/losisin/helm-values-schema-json"; exit 1; }; helm schema --config helm/agent-platform-mcps/.schema.yaml && python3 -c ''import json,sys; h=lambda o: {**{k:v for k,v in o.items() if k!="additionalProperties"},"unevaluatedProperties":False} if ("$ref" in o and o.get("additionalProperties") is False) else o; p=sys.argv[1]; f=open(p,encoding="utf-8"); d=json.load(f,object_hook=h); f.close(); f=open(p,"w",encoding="utf-8"); json.dump(d,f); f.close()'' helm/agent-platform-mcps/values.schema.json && schemalint normalize helm/agent-platform-mcps/values.schema.json -o helm/agent-platform-mcps/values.schema.json --force'
   - repo: https://github.com/giantswarm/schemalint
     rev: v2.6.2
     hooks:
       - id: schemalint-verify
         pass_filenames: false
         args:
-          - helm/agentic-platform-mcps/values.schema.json
+          - helm/agent-platform-mcps/values.schema.json
   - repo: https://github.com/norwoodj/helm-docs
     rev: "v1.14.2"
     hooks:

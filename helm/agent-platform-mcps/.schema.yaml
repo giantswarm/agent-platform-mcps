@@ -9,11 +9,11 @@
 #
 
 values:
-  - helm/agentic-platform-mcps/values.yaml
+  - helm/agent-platform-mcps/values.yaml
 
 draft: 2020
 indent: 4
-output: helm/agentic-platform-mcps/values.schema.json
+output: helm/agent-platform-mcps/values.schema.json
 
 # We enable bundling as the Kubernetes schema is large, and helm only permits 15 seconds to fetch them.
 # We have seen cases where helm timed out before fully fetching the schema.

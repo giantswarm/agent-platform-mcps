@@ -14,7 +14,7 @@
                 },
                 "gateway": {
                     "type": "object",
-                    "description": "Name of the agentgateway data-plane Gateway CR in the release namespace. An HTTPRoute is rendered on this Gateway connecting it to the AgentgatewayBackend. The public ingress HTTPRoute (cluster ingress → agentgateway Service) is owned by the agentic-platform umbrella chart (gateway.httpRoute).",
+                    "description": "Name of the agentgateway data-plane Gateway CR in the release namespace. An HTTPRoute is rendered on this Gateway connecting it to the AgentgatewayBackend. The public ingress HTTPRoute (cluster ingress → agentgateway Service) is owned by the agent-platform umbrella chart (gateway.httpRoute).",
                     "additionalProperties": false,
                     "properties": {
                         "name": {
@@ -142,7 +142,7 @@
         },
         "identityProviders": {
             "type": "object",
-            "description": "Identity providers, defined once and referenced by servers via auth.provider. Multiple servers on the same cluster share one entry instead of repeating token-exchange config.  expectedIssuer pins the `iss` claim of the exchanged token. It is required when tokenEndpoint points at a transport-only proxy (e.g. a tunnelport `:8443` in-cluster Service) whose URL differs from the remote Dex issuer: the minted token still carries the public Dex issuer, so muster must be told what to expect. When tokenEndpoint is the real public Dex URL it can be omitted (muster derives the issuer from tokenEndpoint).  Example (tunneled): cluster-b: tokenEndpoint: https://dex-cluster-b.agentic-platform.svc.cluster.local:8443/token expectedIssuer: https://dex.cluster-b.example.com connectorId: giantswarm-simple-oidc scopes: openid profile email groups credentialsSecret: name: cluster-b-token-exchange-credentials namespace: muster        # optional; defaults to the release namespace clientIdKey: client-id clientSecretKey: client-secret",
+            "description": "Identity providers, defined once and referenced by servers via auth.provider. Multiple servers on the same cluster share one entry instead of repeating token-exchange config.  expectedIssuer pins the `iss` claim of the exchanged token. It is required when tokenEndpoint points at a transport-only proxy (e.g. a tunnelport `:8443` in-cluster Service) whose URL differs from the remote Dex issuer: the minted token still carries the public Dex issuer, so muster must be told what to expect. When tokenEndpoint is the real public Dex URL it can be omitted (muster derives the issuer from tokenEndpoint).  Example (tunneled): cluster-b: tokenEndpoint: https://dex-cluster-b.agent-platform.svc.cluster.local:8443/token expectedIssuer: https://dex.cluster-b.example.com connectorId: giantswarm-simple-oidc scopes: openid profile email groups credentialsSecret: name: cluster-b-token-exchange-credentials namespace: muster        # optional; defaults to the release namespace clientIdKey: client-id clientSecretKey: client-secret",
             "additionalProperties": {
                 "type": "object",
                 "required": [

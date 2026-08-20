@@ -1,12 +1,12 @@
-[![CircleCI](https://dl.circleci.com/status-badge/img/gh/giantswarm/agentic-platform-mcps/tree/main.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/giantswarm/agentic-platform-mcps/tree/main)
-[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/giantswarm/agentic-platform-mcps/badge)](https://securityscorecards.dev/viewer/?uri=github.com/giantswarm/agentic-platform-mcps)
+[![CircleCI](https://dl.circleci.com/status-badge/img/gh/giantswarm/agent-platform-mcps/tree/main.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/giantswarm/agent-platform-mcps/tree/main)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/giantswarm/agent-platform-mcps/badge)](https://securityscorecards.dev/viewer/?uri=github.com/giantswarm/agent-platform-mcps)
 
 [Guide about how to manage an app on Giant Swarm](https://handbook.giantswarm.io/docs/dev-and-releng/app-developer-processes/adding_app_to_appcatalog/)
 
-# agentic-platform-mcps chart
+# agent-platform-mcps chart
 
-Giant Swarm offers a agentic-platform-mcps App which can be installed in workload clusters.
-Here, we define the agentic-platform-mcps chart with its templates and default configuration.
+Giant Swarm offers an agent-platform-mcps App which can be installed in workload clusters.
+Here, we define the agent-platform-mcps chart with its templates and default configuration.
 
 **What is this app?**
 
@@ -29,7 +29,7 @@ agentgateway by flipping a toggle instead of rewriting every file.
 
 **Who can use it?**
 
-Giant Swarm internal teams running the agentic platform on a management cluster.
+Giant Swarm internal teams running the Agent Platform on a management cluster.
 Deployed once per management cluster (its server list + namespace come from that
 cluster's App CR values).
 
@@ -180,7 +180,7 @@ muster:
 agentgateway:
   enabled: true
   viaMuster: true
-  musterUrl: http://agentic-platform-muster.agentic-platform.svc.cluster.local:8090/mcp
+  musterUrl: http://muster.agent-platform.svc.cluster.local:8090/mcp
 ```
 
 - The `AgentgatewayBackend` gets exactly one target (`muster`), parsed from `musterUrl`. An
@@ -222,4 +222,4 @@ Not following these limitations will most likely result in a broken deployment.
 
 ## Credit
 
-- https://github.com/giantswarm/agentic-platform-mcps
+- https://github.com/giantswarm/agent-platform-mcps

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Chart renamed from `agentic-platform-mcps` to `agent-platform-mcps`. The published OCI path changes to `oci://gsoci.azurecr.io/charts/giantswarm/agent-platform-mcps`; the last release under the old name is 0.6.3. Chart description now uses the product name "Giant Swarm Agent Platform".
+
 ### Removed
 
 - The `localMint` value for `mcpServers[].auth.mode` (and its `auth.audience` key). muster removes the `auth.localMint` MCPServer CRD field (giantswarm/muster#947), so the mode would render CRs the admission webhook rejects. Entries using it switch to `mode: forward` (muster forwards the Dex-issued token unchanged and the backend validates it against Dex's JWKS) or `mode: exchange` (RFC 8693 at the backend's Dex). muster never signs tokens and no backend trusts a muster issuer.
