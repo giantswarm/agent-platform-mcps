@@ -1,4 +1,4 @@
-# Values for the agentic-platform-mcps chart.
+# Values for the agent-platform-mcps chart.
 #
 # This chart renders a single, vendor-neutral list of MCP servers (`mcpServers`)
 # into the CR family selected by the toggles below:
@@ -37,7 +37,7 @@ agentgateway:
   # -- Name of the agentgateway data-plane Gateway CR in the release namespace.
   # An HTTPRoute is rendered on this Gateway connecting it to the AgentgatewayBackend.
   # The public ingress HTTPRoute (cluster ingress → agentgateway Service) is
-  # owned by the agentic-platform umbrella chart (gateway.httpRoute).
+  # owned by the agent-platform umbrella chart (gateway.httpRoute).
   gateway:
     name: agentgateway
   # -- OAuth discovery and edge validation mode.
@@ -128,7 +128,7 @@ defaults:
 #
 # Example (tunneled):
 #   cluster-b:
-#     tokenEndpoint: https://dex-cluster-b.agentic-platform.svc.cluster.local:8443/token
+#     tokenEndpoint: https://dex-cluster-b.agent-platform.svc.cluster.local:8443/token
 #     expectedIssuer: https://dex.cluster-b.example.com
 #     connectorId: giantswarm-simple-oidc
 #     scopes: openid profile email groups
