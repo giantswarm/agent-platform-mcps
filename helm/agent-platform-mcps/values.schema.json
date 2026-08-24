@@ -110,6 +110,37 @@
                 }
             }
         },
+        "baseDomain": {
+            "type": "string"
+        },
+        "bootstrapMode": {
+            "type": "object",
+            "additionalProperties": true
+        },
+        "chartOperator": {
+            "type": "object",
+            "additionalProperties": true
+        },
+        "ciliumNetworkPolicy": {
+            "type": "object",
+            "additionalProperties": true
+        },
+        "cluster": {
+            "type": "object",
+            "additionalProperties": true
+        },
+        "clusterCA": {
+            "type": "string"
+        },
+        "clusterCIDR": {
+            "type": "string"
+        },
+        "clusterDNSIP": {
+            "type": "string"
+        },
+        "clusterID": {
+            "type": "string"
+        },
         "defaults": {
             "type": "object",
             "description": "Defaults applied to every mcpServers entry unless overridden per entry.",
@@ -131,6 +162,9 @@
                     "description": "MCP transport protocol."
                 }
             }
+        },
+        "gcpProject": {
+            "type": "string"
         },
         "global": {
             "type": [
@@ -222,6 +256,12 @@
                     }
                 }
             }
+        },
+        "provider": {
+            "type": "string"
+        },
+        "subscriptionID": {
+            "type": "string"
         }
     }
 }
