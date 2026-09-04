@@ -1,0 +1,46 @@
+# Golden case: an auth.mode=oauth server whose authorization server is pinned
+# (GitHub -- no discovery document, no dynamic client registration, grants that
+# belong to the person). Mirrors the gazelle `github` MCPServer.
+mcpServers:
+  - cluster: gazelle
+    group: github
+    name: github
+    url: https://api.githubcopilot.com/mcp/
+    timeout: 120
+    toolPrefix: github
+    auth:
+      mode: oauth
+      authorizationServer:
+        issuer: https://github.com/login/oauth
+        authorizationEndpoint: https://github.com/login/oauth/authorize
+        tokenEndpoint: https://github.com/login/oauth/access_token
+        scopes: "repo read:org project"
+        clientCredentialsSecretRef:
+          name: github-oauth-client
+          namespace: agent-platform
+        grantScope: subject
+  # Issuer-only pin (RFC 8414 discovery still happens): the Atlassian shape.
+  - cluster: gazelle
+    group: atlassian
+    url: https://mcp.atlassian.com/v1/mcp
+    auth:
+      mode: oauth
+      authorizationServer:
+        issuer: https://cf.mcp.atlassian.com
+        scopes: "openid offline_access"
+  # A pre-registered client without a namespace: defaults to the MCPServer's
+  # namespace (here the entry's own, not the release namespace).
+  - cluster: gazelle
+    group: ghe
+    namespace: tools
+    url: https://ghe.example.com/mcp/
+    auth:
+      mode: oauth
+      authorizationServer:
+        issuer: https://ghe.example.com/login/oauth
+        authorizationEndpoint: https://ghe.example.com/login/oauth/authorize
+        tokenEndpoint: https://ghe.example.com/login/oauth/access_token
+        clientCredentialsSecretRef:
+          name: ghe-oauth-client
+          clientIdKey: id
+          clientSecretKey: secret

@@ -219,7 +219,118 @@
         },
         "mcpServers": {
             "type": "array",
-            "description": "Flat list of MCP servers. Required fields per entry: cluster, group, url.  Example entries: # Same-cluster server, the Dex token forwarded as-is. The backend # validates it against Dex's JWKS; muster is not an issuer. - cluster: graveler group: kubernetes url: https://mcp-kubernetes.graveler.example.com/mcp auth: mode: forward  # Remote cluster server, RFC 8693 token exchange via identityProviders: - cluster: gazelle group: kubernetes url: https://mcp-kubernetes.gazelle.example.com/mcp auth: mode: exchange provider: gazelle          # ref into identityProviders above  # Unauthenticated server: - cluster: graveler group: prometheus url: https://mcp-prometheus.graveler.example.com/mcp auth: mode: none"
+            "description": "Flat list of MCP servers. Required fields per entry: cluster, group, url. Optional: name (default <cluster>-mcp-<group>), namespace (default: the release namespace), transport, autoStart, timeout, toolPrefix, auth. The entry schema is closed: a key the chart does not read fails the values check instead of being dropped silently.  auth.mode selects how muster authenticates to the server: none, oauth (muster runs its own OAuth login against the server's authorization server and holds the person's grant), forward (the caller's Dex token, same-cluster only) or exchange (RFC 8693 via identityProviders). For mode oauth, auth.authorizationServer pins an authorization server muster can neither spec.auth.authorizationServer as is; needs the muster chart >= 5.8.0, an older CRD prunes the pin silently. issuer is required; authorizationEndpoint and tokenEndpoint go together (both or neither, the CRD's rule); grantScope is session (default) or subject; clientCredentialsSecretRef.namespace defaults to the MCPServer's namespace. Keys other than these fail the render.  Example entries: # Same-cluster server, the Dex token forwarded as-is. The backend # validates it against Dex's JWKS; muster is not an issuer. - cluster: graveler group: kubernetes url: https://mcp-kubernetes.graveler.example.com/mcp auth: mode: forward  # Remote cluster server, RFC 8693 token exchange via identityProviders: - cluster: gazelle group: kubernetes url: https://mcp-kubernetes.gazelle.example.com/mcp auth: mode: exchange provider: gazelle          # ref into identityProviders above  # Unauthenticated server: - cluster: graveler group: prometheus url: https://mcp-prometheus.graveler.example.com/mcp auth: mode: none  # Hosted server whose authorization server publishes no discovery document # and registers no clients (GitHub): pin it. muster identifies with the # pre-registered client from the Secret (keys client-id / client-secret) # and files the grant under the person, so one connect serves all of # their sessions. `name` keeps the server's name stable for consumers # that address it (the Dev Portal's plans.muster.server). - cluster: gazelle group: github name: github url: https://api.githubcopilot.com/mcp/ timeout: 120 toolPrefix: github auth: mode: oauth authorizationServer: issuer: https://github.com/login/oauth authorizationEndpoint: https://github.com/login/oauth/authorize tokenEndpoint: https://github.com/login/oauth/access_token scopes: \"repo read:org project\" clientCredentialsSecretRef: name: github-oauth-client namespace: agent-platform   # optional; defaults to the server's namespace grantScope: subject           # session (default) | subject",
+            "items": {
+                "type": "object",
+                "required": [
+                    "cluster",
+                    "group",
+                    "url"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                    "auth": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                            "audiences": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            },
+                            "authorizationServer": {
+                                "type": "object",
+                                "required": [
+                                    "issuer"
+                                ],
+                                "additionalProperties": false,
+                                "properties": {
+                                    "authorizationEndpoint": {
+                                        "type": "string"
+                                    },
+                                    "clientCredentialsSecretRef": {
+                                        "type": "object",
+                                        "required": [
+                                            "name"
+                                        ],
+                                        "additionalProperties": false,
+                                        "properties": {
+                                            "clientIdKey": {
+                                                "type": "string"
+                                            },
+                                            "clientSecretKey": {
+                                                "type": "string"
+                                            },
+                                            "name": {
+                                                "type": "string"
+                                            },
+                                            "namespace": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    "grantScope": {
+                                        "type": "string",
+                                        "enum": [
+                                            "session",
+                                            "subject"
+                                        ]
+                                    },
+                                    "issuer": {
+                                        "type": "string"
+                                    },
+                                    "scopes": {
+                                        "type": "string"
+                                    },
+                                    "tokenEndpoint": {
+                                        "type": "string"
+                                    }
+                                }
+                            },
+                            "mode": {
+                                "type": "string",
+                                "enum": [
+                                    "none",
+                                    "oauth",
+                                    "forward",
+                                    "exchange"
+                                ]
+                            },
+                            "provider": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "autoStart": {
+                        "type": "boolean"
+                    },
+                    "cluster": {
+                        "type": "string"
+                    },
+                    "group": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "namespace": {
+                        "type": "string"
+                    },
+                    "timeout": {
+                        "type": "integer"
+                    },
+                    "toolPrefix": {
+                        "type": "string"
+                    },
+                    "transport": {
+                        "type": "string"
+                    },
+                    "url": {
+                        "type": "string"
+                    }
+                }
+            }
         },
         "muster": {
             "type": "object",

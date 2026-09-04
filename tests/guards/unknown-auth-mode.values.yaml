@@ -1,0 +1,7 @@
+# expect: unknown auth.mode "token"
+mcpServers:
+  - cluster: gazelle
+    group: github
+    url: https://api.githubcopilot.com/mcp/
+    auth:
+      mode: token

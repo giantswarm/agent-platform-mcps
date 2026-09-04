@@ -62,6 +62,62 @@ with a clear message if it is missing. Pass a dict {root, server}.
 {{- end -}}
 
 {{/*
+Render spec.auth.authorizationServer for an auth.mode=oauth entry whose
+authorization server muster can neither discover nor register with (muster
+>= 5.8.0, giantswarm/muster#1144). Mirrors the MCPServer CRD's admission rules
+so a bad entry fails at render time, naming the entry, instead of at apply
+time. Pass a dict {name, namespace, as}: the rendered server name, the
+namespace the MCPServer lands in (the default for the secret reference) and
+the entry's auth.authorizationServer block.
+*/}}
+{{- define "mcp.authorizationServer" -}}
+{{- $as := .as -}}
+{{- $known := list "issuer" "authorizationEndpoint" "tokenEndpoint" "scopes" "clientCredentialsSecretRef" "grantScope" -}}
+{{- range $k, $_ := $as -}}
+{{- if not (has $k $known) -}}
+{{- fail (printf "mcpServers entry %q: unknown auth.authorizationServer key %q (want one of %s)" $.name $k (join ", " $known)) -}}
+{{- end -}}
+{{- end -}}
+{{- if not $as.issuer -}}
+{{- fail (printf "mcpServers entry %q: auth.authorizationServer.issuer is required" .name) -}}
+{{- end -}}
+{{- if ne (empty $as.authorizationEndpoint) (empty $as.tokenEndpoint) -}}
+{{- fail (printf "mcpServers entry %q: auth.authorizationServer.authorizationEndpoint and tokenEndpoint must be set together" .name) -}}
+{{- end -}}
+{{- if and $as.grantScope (not (has $as.grantScope (list "session" "subject"))) -}}
+{{- fail (printf "mcpServers entry %q: auth.authorizationServer.grantScope must be session or subject, got %q" .name $as.grantScope) -}}
+{{- end -}}
+{{- if and $as.clientCredentialsSecretRef (not $as.clientCredentialsSecretRef.name) -}}
+{{- fail (printf "mcpServers entry %q: auth.authorizationServer.clientCredentialsSecretRef.name is required" .name) -}}
+{{- end -}}
+authorizationServer:
+  issuer: {{ $as.issuer }}
+  {{- with $as.authorizationEndpoint }}
+  authorizationEndpoint: {{ . }}
+  {{- end }}
+  {{- with $as.tokenEndpoint }}
+  tokenEndpoint: {{ . }}
+  {{- end }}
+  {{- with $as.scopes }}
+  scopes: {{ . | quote }}
+  {{- end }}
+  {{- with $as.clientCredentialsSecretRef }}
+  clientCredentialsSecretRef:
+    name: {{ .name }}
+    namespace: {{ .namespace | default $.namespace }}
+    {{- with .clientIdKey }}
+    clientIdKey: {{ . }}
+    {{- end }}
+    {{- with .clientSecretKey }}
+    clientSecretKey: {{ . }}
+    {{- end }}
+  {{- end }}
+  {{- with $as.grantScope }}
+  grantScope: {{ . }}
+  {{- end }}
+{{- end -}}
+
+{{/*
 URL parsing helpers for agentgateway static targets. Pass the url string as the
 context. Examples assume "https://mcp-kubernetes.cluster.example.io/mcp".
 */}}

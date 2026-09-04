@@ -1,0 +1,10 @@
+# expect: auth.authorizationServer.authorizationEndpoint and tokenEndpoint must be set together
+mcpServers:
+  - cluster: gazelle
+    group: github
+    url: https://api.githubcopilot.com/mcp/
+    auth:
+      mode: oauth
+      authorizationServer:
+        issuer: https://github.com/login/oauth
+        tokenEndpoint: https://github.com/login/oauth/access_token

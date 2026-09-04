@@ -1,0 +1,12 @@
+# expect: unknown auth.authorizationServer key "grantscope"
+# (values.schema.json rejects this first; the render guard is the second line
+# of defence for consumers that skip schema validation.)
+mcpServers:
+  - cluster: gazelle
+    group: github
+    url: https://api.githubcopilot.com/mcp/
+    auth:
+      mode: oauth
+      authorizationServer:
+        issuer: https://github.com/login/oauth
+        grantscope: subject
