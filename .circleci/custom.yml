@@ -1,0 +1,44 @@
+# Repo-specific CircleCI jobs. The dynamic-config setup workflow in
+# .circleci/config.yml deep-merges this file into the generated
+# .circleci/workflows.yml at pipeline runtime (yq `*+`: maps merge, job lists
+# append). devctl never touches this file.
+#
+# Generated job names available to reference in `requires`: build-chart,
+# execute-chart-tests, push-chart-release.
+#
+# What this file carries beyond the golden (single-chart) pipeline:
+#   - verify-render: `make verify-render` on branches -- the tests/golden
+#     cases must render byte for byte and the tests/guards cases must fail
+#     with their expected message. The ATS smoke test installs the chart with
+#     empty values on a kind cluster that has no MCPServer CRD, so the rendered
+#     CRs are only ever checked here.
+version: 2.1
+
+jobs:
+  verify-render:
+    docker:
+    - image: cimg/base:current
+    steps:
+    - checkout
+    - run:
+        name: install helm + make
+        command: |
+          command -v make >/dev/null 2>&1 || (sudo apt-get update -qq && sudo apt-get install -y -qq make)
+          # Pinned (not `latest`) so a Helm minor cannot change the render
+          # under a queued PR. Avoids the curl|bash pattern.
+          curl -fsSL https://get.helm.sh/helm-v3.17.3-linux-amd64.tar.gz | tar xz -C /tmp
+          sudo mv /tmp/linux-amd64/helm /usr/local/bin/helm
+          helm version
+    - run:
+        name: verify golden renders and fail-guards
+        command: make verify-render
+
+workflows:
+  build:
+    jobs:
+    # Branch-only; the tag path publishes the chart the branch run verified.
+    - verify-render:
+        filters:
+          branches:
+            ignore:
+            - main

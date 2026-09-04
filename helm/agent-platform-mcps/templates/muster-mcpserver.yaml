@@ -3,6 +3,8 @@
 {{- range .Values.mcpServers }}
 {{- $auth := .auth | default dict }}
 {{- $mode := $auth.mode | default "none" }}
+{{- $name := include "mcp.serverName" . }}
+{{- $namespace := .namespace | default $root.Release.Namespace }}
 {{- /* Default audiences apply to token-propagating modes; others only if explicit. */}}
 {{- $audiences := $auth.audiences }}
 {{- if and (not $audiences) (or (eq $mode "forward") (eq $mode "exchange")) }}
@@ -12,8 +14,8 @@
 apiVersion: muster.giantswarm.io/v1alpha1
 kind: MCPServer
 metadata:
-  name: {{ include "mcp.serverName" . }}
-  namespace: {{ .namespace | default $root.Release.Namespace }}
+  name: {{ $name }}
+  namespace: {{ $namespace }}
   labels:
     {{- include "labels.common" $root | nindent 4 }}
     muster.giantswarm.io/management-cluster: {{ .cluster }}
@@ -35,6 +37,12 @@ spec:
     {{- else if eq $mode "oauth" }}
     type: oauth
     forwardToken: false
+    {{- /* Pin an authorization server muster cannot discover or register with
+           (GitHub): endpoints, a pre-registered client, subject-scoped grants.
+           Only valid here -- forward and exchange carry their own issuer. */}}
+    {{- with $auth.authorizationServer }}
+    {{- include "mcp.authorizationServer" (dict "name" $name "namespace" $namespace "as" .) | nindent 4 }}
+    {{- end }}
     {{- else if eq $mode "forward" }}
     type: oauth
     forwardToken: true
@@ -62,7 +70,7 @@ spec:
         clientSecretKey: {{ .clientSecretKey }}
       {{- end }}
     {{- else }}
-    {{- fail (printf "mcpServers entry %q: unknown auth.mode %q (want none|oauth|forward|exchange)" (include "mcp.serverName" .) $mode) }}
+    {{- fail (printf "mcpServers entry %q: unknown auth.mode %q (want none|oauth|forward|exchange)" $name $mode) }}
     {{- end }}
     {{- with $audiences }}
     requiredAudiences:

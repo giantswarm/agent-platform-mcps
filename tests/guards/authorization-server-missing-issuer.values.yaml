@@ -1,0 +1,9 @@
+# expect: auth.authorizationServer.issuer is required
+mcpServers:
+  - cluster: gazelle
+    group: github
+    url: https://api.githubcopilot.com/mcp/
+    auth:
+      mode: oauth
+      authorizationServer:
+        scopes: "repo"

@@ -1,0 +1,40 @@
+# Golden case: one server per auth.mode without a pin -- the rendering the
+# fleet relies on today, so a change to it is a deliberate one.
+identityProviders:
+  cluster-b:
+    tokenEndpoint: https://dex-cluster-b.agent-platform.svc.cluster.local:8443/token
+    expectedIssuer: https://dex.cluster-b.example.com
+    connectorId: giantswarm-simple-oidc
+    scopes: openid profile email groups
+    credentialsSecret:
+      name: cluster-b-token-exchange-credentials
+      clientIdKey: client-id
+      clientSecretKey: client-secret
+mcpServers:
+  - cluster: cluster-a
+    group: kubernetes
+    url: http://mcp-kubernetes.mcp-kubernetes.svc:8080/mcp
+    timeout: 30
+    auth:
+      mode: forward
+  - cluster: cluster-b
+    group: prometheus
+    url: https://mcp-prometheus-cluster-b.agent-platform.svc.cluster.local:8443/mcp
+    timeout: 30
+    auth:
+      mode: exchange
+      provider: cluster-b
+  - cluster: cluster-a
+    group: pro
+    url: http://pro.mcp-pro.svc.cluster.local:8080/mcp
+    timeout: 120
+    toolPrefix: pro
+    auth:
+      mode: oauth
+  - cluster: cluster-a
+    group: runbooks
+    url: http://mcp-runbooks.mcp-runbooks.svc.cluster.local:8080/mcp
+    toolPrefix: runbooks
+    autoStart: false
+    auth:
+      mode: none

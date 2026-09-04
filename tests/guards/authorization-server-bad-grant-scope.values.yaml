@@ -1,0 +1,10 @@
+# expect: auth.authorizationServer.grantScope must be session or subject, got "user"
+mcpServers:
+  - cluster: gazelle
+    group: github
+    url: https://api.githubcopilot.com/mcp/
+    auth:
+      mode: oauth
+      authorizationServer:
+        issuer: https://github.com/login/oauth
+        grantScope: user

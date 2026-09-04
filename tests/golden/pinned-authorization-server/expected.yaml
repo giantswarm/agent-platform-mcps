@@ -1,0 +1,95 @@
+---
+# Source: agent-platform-mcps/templates/muster-mcpserver.yaml
+apiVersion: muster.giantswarm.io/v1alpha1
+kind: MCPServer
+metadata:
+  name: github
+  namespace: agent-platform
+  labels:
+    app: "agent-platform-mcps"
+    app.kubernetes.io/name: "agent-platform-mcps"
+    app.kubernetes.io/instance: "agent-platform-mcps"
+    app.kubernetes.io/managed-by: "Helm"
+    app.kubernetes.io/version: "0.0.1"
+    application.giantswarm.io/team: "team-bumblebee"
+    helm.sh/chart: "agent-platform-mcps-0.5.0"
+    muster.giantswarm.io/management-cluster: gazelle
+    muster.giantswarm.io/type: mcp-github
+spec:
+  autoStart: true
+  type: streamable-http
+  url: https://api.githubcopilot.com/mcp/
+  timeout: 120
+  toolPrefix: github
+  auth:
+    type: oauth
+    forwardToken: false
+    authorizationServer:
+      issuer: https://github.com/login/oauth
+      authorizationEndpoint: https://github.com/login/oauth/authorize
+      tokenEndpoint: https://github.com/login/oauth/access_token
+      scopes: "repo read:org project"
+      clientCredentialsSecretRef:
+        name: github-oauth-client
+        namespace: agent-platform
+      grantScope: subject
+---
+# Source: agent-platform-mcps/templates/muster-mcpserver.yaml
+apiVersion: muster.giantswarm.io/v1alpha1
+kind: MCPServer
+metadata:
+  name: gazelle-mcp-atlassian
+  namespace: agent-platform
+  labels:
+    app: "agent-platform-mcps"
+    app.kubernetes.io/name: "agent-platform-mcps"
+    app.kubernetes.io/instance: "agent-platform-mcps"
+    app.kubernetes.io/managed-by: "Helm"
+    app.kubernetes.io/version: "0.0.1"
+    application.giantswarm.io/team: "team-bumblebee"
+    helm.sh/chart: "agent-platform-mcps-0.5.0"
+    muster.giantswarm.io/management-cluster: gazelle
+    muster.giantswarm.io/type: mcp-atlassian
+spec:
+  autoStart: true
+  type: streamable-http
+  url: https://mcp.atlassian.com/v1/mcp
+  auth:
+    type: oauth
+    forwardToken: false
+    authorizationServer:
+      issuer: https://cf.mcp.atlassian.com
+      scopes: "openid offline_access"
+---
+# Source: agent-platform-mcps/templates/muster-mcpserver.yaml
+apiVersion: muster.giantswarm.io/v1alpha1
+kind: MCPServer
+metadata:
+  name: gazelle-mcp-ghe
+  namespace: tools
+  labels:
+    app: "agent-platform-mcps"
+    app.kubernetes.io/name: "agent-platform-mcps"
+    app.kubernetes.io/instance: "agent-platform-mcps"
+    app.kubernetes.io/managed-by: "Helm"
+    app.kubernetes.io/version: "0.0.1"
+    application.giantswarm.io/team: "team-bumblebee"
+    helm.sh/chart: "agent-platform-mcps-0.5.0"
+    muster.giantswarm.io/management-cluster: gazelle
+    muster.giantswarm.io/type: mcp-ghe
+spec:
+  autoStart: true
+  type: streamable-http
+  url: https://ghe.example.com/mcp/
+  auth:
+    type: oauth
+    forwardToken: false
+    authorizationServer:
+      issuer: https://ghe.example.com/login/oauth
+      authorizationEndpoint: https://ghe.example.com/login/oauth/authorize
+      tokenEndpoint: https://ghe.example.com/login/oauth/access_token
+      clientCredentialsSecretRef:
+        name: ghe-oauth-client
+        namespace: tools
+        clientIdKey: id
+        clientSecretKey: secret

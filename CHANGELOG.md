@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `auth.authorizationServer` for `auth.mode: oauth` entries: pin an authorization server muster can neither discover nor register with (GitHub) -- `issuer`, `authorizationEndpoint`/`tokenEndpoint` (both or neither), `scopes`, `clientCredentialsSecretRef` and `grantScope: session|subject` are rendered into the MCPServer's `spec.auth.authorizationServer` (muster >= 5.8.0). A missing issuer, a lone endpoint, an unknown `grantScope` or an unknown key fails the render with the entry's name.
+- A closed per-entry schema for `mcpServers` in `values.schema.json` (`cluster`, `group`, `url` required; `name`, `namespace`, `transport`, `autoStart`, `timeout`, `toolPrefix`, `auth.{mode,provider,audiences,authorizationServer}`): a key the chart does not read fails the values check instead of being dropped silently.
+- `make verify-render`: golden renders under `tests/golden/` and fail-guard cases under `tests/guards/`, run on branches by the `verify-render` CircleCI job.
+
 ### Changed
 
 - Chart renamed from `agentic-platform-mcps` to `agent-platform-mcps`. The published OCI path changes to `oci://gsoci.azurecr.io/charts/giantswarm/agent-platform-mcps`; the last release under the old name is 0.6.3. Chart description now uses the product name "Giant Swarm Agent Platform".

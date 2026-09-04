@@ -62,16 +62,35 @@ share a cluster's Dex point at the same entry instead of repeating the token-exc
 
 **`mcpServers`** — a flat list. Required per entry: `cluster`, `group`, `url`. Optional: `name`
 (defaults to `<cluster>-mcp-<group>`), `namespace` (defaults to the release namespace), `transport`
-(default `streamable-http`), `autoStart` (default `true`), `timeout`, `toolPrefix`, and `auth`.
+(default `streamable-http`), `autoStart` (default `true`), `timeout`, `toolPrefix`, and `auth`. The
+entry schema is closed (`values.schema.json`): a key the chart does not read fails the values check
+instead of being dropped silently.
 
 `auth.mode` is the one knob that describes how the server is authenticated, vendor-neutrally:
 
 | `auth.mode` | meaning |
 |---|---|
 | `none`     | no auth (anonymous upstream) |
-| `oauth`    | caller authenticated, no token propagated to the upstream |
+| `oauth`    | muster runs its own OAuth login against the server's authorization server and holds the person's grant; no caller token propagated. `auth.authorizationServer` pins an authorization server muster cannot discover or register with (see below) |
 | `forward`  | forward the caller's verified token to the upstream (same-cluster only) |
 | `exchange` | RFC 8693 token exchange against `auth.provider`'s Dex (cross-cluster) |
+
+**`auth.authorizationServer`** (mode `oauth` only) describes an authorization server that publishes
+no RFC 9728 / RFC 8414 metadata, registers no clients dynamically, or issues tokens that belong to the
+person rather than to one login session — GitHub is the prompting case. It is passed through to the
+MCPServer's `spec.auth.authorizationServer` (muster ≥ 5.8.0):
+
+| key | meaning |
+|---|---|
+| `issuer` (required) | the issuer the grants are filed under; discovered via RFC 8414 unless the endpoints are pinned |
+| `authorizationEndpoint`, `tokenEndpoint` | pinned endpoints for an issuer without a discovery document; **both or neither** (the CRD's rule, enforced at render time) |
+| `scopes` | OAuth scope string, space-separated |
+| `clientCredentialsSecretRef` | `{name, namespace, clientIdKey, clientSecretKey}` of a Secret holding a client registered out of band (a GitHub App); `namespace` defaults to the MCPServer's namespace, the keys to `client-id` / `client-secret` |
+| `grantScope` | `session` (default) or `subject`: file the grant under the person so every later session of theirs reuses it |
+
+Any other key under `auth.authorizationServer`, a missing `issuer`, a lone endpoint or an unknown
+`grantScope` fails the render with the entry's name. An older muster CRD would prune the new fields
+silently, so upgrade muster first.
 
 ```yaml
 muster:
@@ -109,6 +128,27 @@ mcpServers:
     timeout: 30
     toolPrefix: runbooks
     auth: { mode: none }
+
+  # hosted server behind an authorization server muster can neither discover
+  # nor register with (GitHub): pinned endpoints, a pre-registered client, a
+  # grant that belongs to the person. `name` keeps the server addressable as
+  # "github" for consumers such as the Dev Portal's plans.muster.server.
+  - cluster: cluster-a
+    group: github
+    name: github
+    url: https://api.githubcopilot.com/mcp/
+    timeout: 120
+    toolPrefix: github
+    auth:
+      mode: oauth
+      authorizationServer:
+        issuer: https://github.com/login/oauth
+        authorizationEndpoint: https://github.com/login/oauth/authorize
+        tokenEndpoint: https://github.com/login/oauth/access_token
+        scopes: "repo read:org project"
+        clientCredentialsSecretRef:
+          name: github-oauth-client      # keys client-id / client-secret
+        grantScope: subject
 ```
 
 ### muster output (`muster.enabled: true`)
@@ -120,9 +160,10 @@ namespace, with the abstract input translated to the muster CRD:
   `muster.giantswarm.io/management-cluster: <cluster>` and `muster.giantswarm.io/type: mcp-<group>`.
 - `spec.type` ← `transport`; plus `spec.url`, `spec.timeout`, `spec.toolPrefix`, `spec.autoStart`.
 - `spec.auth` is built from `auth.mode`: `none`→`type: none`; `oauth`→`type: oauth, forwardToken:
-  false`; `forward`→`forwardToken: true`; `exchange`→`tokenExchange{...}` expanded from the
-  referenced `identityProviders` entry. `requiredAudiences` defaults to `defaults.audiences` for
-  the token-propagating modes.
+  false` plus `authorizationServer{...}` copied from `auth.authorizationServer` when set;
+  `forward`→`forwardToken: true`; `exchange`→`tokenExchange{...}` expanded from the referenced
+  `identityProviders` entry. `requiredAudiences` defaults to `defaults.audiences` for the
+  token-propagating modes.
 - `spec.family` is emitted when the entry's `group` is listed under `muster.families` (e.g.
   `kubernetes`, `prometheus`); singleton groups (`pro`, `runbooks`) get none.
 
@@ -217,6 +258,8 @@ Not following these limitations will most likely result in a broken deployment.
 
 - The `MCPServer`, `agentgateway.dev`, and Gateway API CRDs must already be installed
   on the cluster — this chart only renders the custom resources, not their definitions.
+- `auth.authorizationServer` with pinned endpoints, a client secret or `grantScope` needs the
+  muster chart ≥ 5.8.0; an older `MCPServer` CRD prunes those fields silently.
 - Enabling the agentgateway path for token-exchange servers requires the muster
   token-exchange broker to be deployed.
 
