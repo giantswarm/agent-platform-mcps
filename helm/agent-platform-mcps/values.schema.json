@@ -346,6 +346,15 @@
                     "description": "Groups that muster exposes as instance families. A server whose `group` is listed here gets a muster `family` block; unlisted groups are singletons.",
                     "additionalProperties": false,
                     "properties": {
+                        "capi": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "instanceArg": {
+                                    "type": "string"
+                                }
+                            }
+                        },
                         "kubernetes": {
                             "type": "object",
                             "additionalProperties": false,

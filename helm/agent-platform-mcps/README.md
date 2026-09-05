@@ -12,9 +12,9 @@ Chart to deploy MCPs for the Giant Swarm Agent Platform.
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| muster | object | `{"enabled":true,"families":{"kubernetes":{"instanceArg":"management_cluster"},"prometheus":{"instanceArg":"management_cluster"}}}` | Render muster MCPServer CRs from the mcpServers list. |
+| muster | object | `{"enabled":true,"families":{"capi":{"instanceArg":"management_cluster"},"kubernetes":{"instanceArg":"management_cluster"},"prometheus":{"instanceArg":"management_cluster"}}}` | Render muster MCPServer CRs from the mcpServers list. |
 | muster.enabled | bool | `true` | Enable muster MCPServer rendering. |
-| muster.families | object | `{"kubernetes":{"instanceArg":"management_cluster"},"prometheus":{"instanceArg":"management_cluster"}}` | Groups that muster exposes as instance families. A server whose `group` is listed here gets a muster `family` block; unlisted groups are singletons. |
+| muster.families | object | `{"capi":{"instanceArg":"management_cluster"},"kubernetes":{"instanceArg":"management_cluster"},"prometheus":{"instanceArg":"management_cluster"}}` | Groups that muster exposes as instance families. A server whose `group` is listed here gets a muster `family` block; unlisted groups are singletons. |
 | agentgateway | object | `{"enabled":false,"gateway":{"name":"agentgateway"},"jwt":{"audiences":["dex-k8s-authenticator"],"extraProviders":[],"issuer":"","jwksBackendRef":{"name":"dex","namespace":"giantswarm","port":5556},"jwksPath":"/keys"},"musterUrl":"","oauthMode":"passthrough","tokenExchange":{"broker":{"kind":"Service","name":"muster-token-exchange-broker","namespace":"muster","port":8080,"protocol":"grpc"}},"viaMuster":false}` | Render agentgateway CRs for the via-muster topology. When viaMuster is true the traffic flow is:   client → agentgateway → muster → N MCP servers agentgateway becomes the single MCP choke point for observability (per-call metrics, traces, access logs). muster keeps all per-server connection logic, OAuth, and RFC 8693 token exchange. |
 | agentgateway.enabled | bool | `false` | Enable agentgateway CR rendering. |
 | agentgateway.viaMuster | bool | `false` | Route all MCP traffic through muster as a single backend instead of connecting agentgateway directly to each server. Requires muster.enabled: true. |

@@ -18,6 +18,8 @@ muster:
       instanceArg: management_cluster
     prometheus:
       instanceArg: management_cluster
+    capi:
+      instanceArg: management_cluster
 
 # -- Render agentgateway CRs for the via-muster topology.
 # When viaMuster is true the traffic flow is:

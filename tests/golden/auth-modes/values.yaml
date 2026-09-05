@@ -38,3 +38,30 @@ mcpServers:
     autoStart: false
     auth:
       mode: none
+  - cluster: cluster-a
+    group: capi
+    url: http://mcp-capi.mcp-capi.svc:8080/mcp
+    timeout: 30
+    auth:
+      mode: forward
+  - cluster: cluster-b
+    group: prometheus
+    url: https://mcp-prometheus-cluster-b.agent-platform.svc.cluster.local:8443/mcp
+    timeout: 30
+    auth:
+      mode: exchange
+      provider: cluster-b
+  - cluster: cluster-a
+    group: pro
+    url: http://pro.mcp-pro.svc.cluster.local:8080/mcp
+    timeout: 120
+    toolPrefix: pro
+    auth:
+      mode: oauth
+  - cluster: cluster-a
+    group: runbooks
+    url: http://mcp-runbooks.mcp-runbooks.svc.cluster.local:8080/mcp
+    toolPrefix: runbooks
+    autoStart: false
+    auth:
+      mode: none
