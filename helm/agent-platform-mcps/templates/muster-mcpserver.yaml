@@ -5,6 +5,20 @@
 {{- $mode := $auth.mode | default "none" }}
 {{- $name := include "mcp.serverName" . }}
 {{- $namespace := .namespace | default $root.Release.Namespace }}
+{{- /* The Agent Platform tier: the entry's toolGroup, else its family's, else
+       none -- the server is a Registered server. */}}
+{{- $toolGroup := "" }}
+{{- $toolGroupSource := "" }}
+{{- if .toolGroup }}
+{{- $toolGroup = .toolGroup }}
+{{- $toolGroupSource = printf "mcpServers entry %q: toolGroup" $name }}
+{{- else if hasKey $root.Values.muster.families .group }}
+{{- $toolGroup = (index $root.Values.muster.families .group).toolGroup | default "" }}
+{{- $toolGroupSource = printf "muster.families.%s.toolGroup" .group }}
+{{- end }}
+{{- if and $toolGroup (not (has $toolGroup (list "agent-platform" "infrastructure"))) }}
+{{- fail (printf "%s: unknown tool group \"%v\" (want agent-platform|infrastructure)" $toolGroupSource $toolGroup) }}
+{{- end }}
 {{- /* Default audiences apply to token-propagating modes; others only if explicit. */}}
 {{- $audiences := $auth.audiences }}
 {{- if and (not $audiences) (or (eq $mode "forward") (eq $mode "exchange")) }}
@@ -20,6 +34,9 @@ metadata:
     {{- include "labels.common" $root | nindent 4 }}
     muster.giantswarm.io/management-cluster: {{ .cluster }}
     muster.giantswarm.io/type: mcp-{{ .group }}
+    {{- with $toolGroup }}
+    agent-platform.giantswarm.io/tool-group: {{ . }}
+    {{- end }}
 spec:
   autoStart: {{ if hasKey . "autoStart" }}{{ .autoStart }}{{ else }}{{ $root.Values.defaults.autoStart }}{{ end }}
   type: {{ .transport | default $root.Values.defaults.transport }}

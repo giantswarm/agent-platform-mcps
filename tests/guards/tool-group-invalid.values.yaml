@@ -1,0 +1,9 @@
+# expect: mcpServers entry "github": toolGroup: unknown tool group "other"
+mcpServers:
+  - cluster: gazelle
+    group: github
+    name: github
+    url: https://api.githubcopilot.com/mcp/
+    toolGroup: other
+    auth:
+      mode: none

@@ -1,0 +1,11 @@
+# expect: muster.families.kubernetes.toolGroup: unknown tool group "platform"
+muster:
+  families:
+    kubernetes:
+      toolGroup: platform
+mcpServers:
+  - cluster: gazelle
+    group: kubernetes
+    url: http://mcp-kubernetes.mcp-kubernetes.svc:8080/mcp
+    auth:
+      mode: forward
