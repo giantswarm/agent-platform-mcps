@@ -13,13 +13,26 @@ muster:
   enabled: true
   # -- Groups that muster exposes as instance families. A server whose `group`
   # is listed here gets a muster `family` block; unlisted groups are singletons.
+  # `toolGroup` is the group's tier on the Agent Platform, stamped as the label
+  # `agent-platform.giantswarm.io/tool-group` on every server of the group:
+  # `infrastructure` (the servers for the management clusters the platform
+  # runs on -- the chart default for kubernetes, prometheus and capi) or
+  # `agent-platform` (the platform's own management surface). A group without
+  # a `toolGroup` renders no tier label: its servers are Registered servers.
+  # `mcpServers[].toolGroup` overrides the group's tier per entry.
   families:
     kubernetes:
       instanceArg: management_cluster
+      # -- Tier label value for every kubernetes server.
+      toolGroup: infrastructure  # @schema enum: [agent-platform, infrastructure]
     prometheus:
       instanceArg: management_cluster
+      # -- Tier label value for every prometheus server.
+      toolGroup: infrastructure  # @schema enum: [agent-platform, infrastructure]
     capi:
       instanceArg: management_cluster
+      # -- Tier label value for every capi server.
+      toolGroup: infrastructure  # @schema enum: [agent-platform, infrastructure]
 
 # -- Render agentgateway CRs for the via-muster topology.
 # When viaMuster is true the traffic flow is:
@@ -141,12 +154,19 @@ defaults:
 #       clientSecretKey: client-secret
 identityProviders: {}
 
-# @schema item: object; itemRequired: [cluster, group, url]; itemProperties: {cluster: {type: string}, group: {type: string}, url: {type: string}, name: {type: string}, namespace: {type: string}, transport: {type: string}, autoStart: {type: boolean}, timeout: {type: integer}, toolPrefix: {type: string}, auth: {type: object, properties: {mode: {type: string, enum: [none, oauth, forward, exchange]}, provider: {type: string}, audiences: {type: array, items: {type: string}}, authorizationServer: {type: object, required: [issuer], properties: {issuer: {type: string}, authorizationEndpoint: {type: string}, tokenEndpoint: {type: string}, scopes: {type: string}, clientCredentialsSecretRef: {type: object, required: [name], properties: {name: {type: string}, namespace: {type: string}, clientIdKey: {type: string}, clientSecretKey: {type: string}}}, grantScope: {type: string, enum: [session, subject]}}}}}}
+# @schema item: object; itemRequired: [cluster, group, url]; itemProperties: {cluster: {type: string}, group: {type: string}, url: {type: string}, name: {type: string}, namespace: {type: string}, transport: {type: string}, autoStart: {type: boolean}, timeout: {type: integer}, toolPrefix: {type: string}, toolGroup: {type: string, enum: [agent-platform, infrastructure]}, auth: {type: object, properties: {mode: {type: string, enum: [none, oauth, forward, exchange]}, provider: {type: string}, audiences: {type: array, items: {type: string}}, authorizationServer: {type: object, required: [issuer], properties: {issuer: {type: string}, authorizationEndpoint: {type: string}, tokenEndpoint: {type: string}, scopes: {type: string}, clientCredentialsSecretRef: {type: object, required: [name], properties: {name: {type: string}, namespace: {type: string}, clientIdKey: {type: string}, clientSecretKey: {type: string}}}, grantScope: {type: string, enum: [session, subject]}}}}}}
 # -- Flat list of MCP servers. Required fields per entry: cluster, group, url.
 # Optional: name (default <cluster>-mcp-<group>), namespace (default: the
-# release namespace), transport, autoStart, timeout, toolPrefix, auth. The
-# entry schema is closed: a key the chart does not read fails the values
-# check instead of being dropped silently.
+# release namespace), transport, autoStart, timeout, toolPrefix, toolGroup,
+# auth. The entry schema is closed: a key the chart does not read fails the
+# values check instead of being dropped silently.
+#
+# toolGroup overrides the tier the entry's group gets from muster.families
+# (agent-platform or infrastructure), rendered as the label
+# agent-platform.giantswarm.io/tool-group -- for example to file a server of
+# an unlisted group under the Agent Platform tier. An entry whose group has no
+# toolGroup and that sets none renders no tier label: it is a Registered
+# server. Any other value fails the render.
 #
 # auth.mode selects how muster authenticates to the server: none, oauth
 # (muster runs its own OAuth login against the server's authorization server

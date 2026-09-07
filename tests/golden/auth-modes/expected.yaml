@@ -15,6 +15,7 @@ metadata:
     helm.sh/chart: "agent-platform-mcps-0.5.0"
     muster.giantswarm.io/management-cluster: cluster-a
     muster.giantswarm.io/type: mcp-kubernetes
+    agent-platform.giantswarm.io/tool-group: infrastructure
 spec:
   autoStart: true
   type: streamable-http
@@ -45,6 +46,7 @@ metadata:
     helm.sh/chart: "agent-platform-mcps-0.5.0"
     muster.giantswarm.io/management-cluster: cluster-b
     muster.giantswarm.io/type: mcp-prometheus
+    agent-platform.giantswarm.io/tool-group: infrastructure
 spec:
   autoStart: true
   type: streamable-http
@@ -137,6 +139,7 @@ metadata:
     helm.sh/chart: "agent-platform-mcps-0.5.0"
     muster.giantswarm.io/management-cluster: cluster-a
     muster.giantswarm.io/type: mcp-capi
+    agent-platform.giantswarm.io/tool-group: infrastructure
 spec:
   autoStart: true
   type: streamable-http
@@ -167,6 +170,7 @@ metadata:
     helm.sh/chart: "agent-platform-mcps-0.5.0"
     muster.giantswarm.io/management-cluster: cluster-b
     muster.giantswarm.io/type: mcp-prometheus
+    agent-platform.giantswarm.io/tool-group: infrastructure
 spec:
   autoStart: true
   type: streamable-http

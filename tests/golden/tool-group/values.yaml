@@ -1,0 +1,40 @@
+# Golden case: the Agent Platform tier label. The family default
+# (muster.families.<group>.toolGroup) stamps kubernetes/prometheus/capi servers
+# as infrastructure, a per-entry toolGroup wins over it, an entry of an unlisted
+# group renders no tier label unless it sets one, and the family default itself
+# is a value (capi filed under agent-platform here).
+muster:
+  families:
+    capi:
+      toolGroup: agent-platform
+mcpServers:
+  - cluster: cluster-a
+    group: kubernetes
+    url: http://mcp-kubernetes.mcp-kubernetes.svc:8080/mcp
+    auth:
+      mode: forward
+  - cluster: cluster-a
+    group: kubernetes
+    name: cluster-a-mcp-kubernetes-platform
+    toolGroup: agent-platform
+    url: http://mcp-kubernetes.mcp-kubernetes.svc:8080/mcp
+    auth:
+      mode: forward
+  - cluster: cluster-a
+    group: capi
+    url: http://mcp-capi.mcp-capi.svc:8080/mcp
+    auth:
+      mode: forward
+  - cluster: cluster-a
+    group: agent-manager
+    name: agent-manager
+    toolGroup: agent-platform
+    url: http://agent-manager.agent-platform.svc.cluster.local:8080/mcp
+    auth:
+      mode: forward
+  - cluster: cluster-a
+    group: github
+    name: github
+    url: https://api.githubcopilot.com/mcp/
+    auth:
+      mode: none
