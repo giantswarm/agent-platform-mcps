@@ -18,6 +18,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Chart renamed from `agentic-platform-mcps` to `agent-platform-mcps`. The published OCI path changes to `oci://gsoci.azurecr.io/charts/giantswarm/agent-platform-mcps`; the last release under the old name is 0.6.3. Chart description now uses the product name "Giant Swarm Agent Platform".
 
+### Fixed
+
+- `helm.sh/chart` label on branch builds: ABS versions a branch build `<semver>-dev.<branch>.<date>.<time>.<sha>` and the label is `<name>-<version>` cut to 63 characters. When the cut landed on a `.` (a 12-character branch name for this chart) the value was not a valid label value and the API server rejected every labelled object. The helper now trims trailing `.` and `-` (`trimAll "-."`), and `make verify-render` packages the chart with such a version and asserts the rendered label values stay valid.
+
 ### Removed
 
 - The `localMint` value for `mcpServers[].auth.mode` (and its `auth.audience` key). muster removes the `auth.localMint` MCPServer CRD field (giantswarm/muster#947), so the mode would render CRs the admission webhook rejects. Entries using it switch to `mode: forward` (muster forwards the Dex-issued token unchanged and the backend validates it against Dex's JWKS) or `mode: exchange` (RFC 8693 at the backend's Dex). muster never signs tokens and no backend trusts a muster issuer.
