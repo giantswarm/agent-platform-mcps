@@ -7,10 +7,12 @@ Expand the name of the chart.
 {{- end -}}
 
 {{/*
-Create chart name and version as used by the chart label.
+Create chart name and version as used by the chart label. A branch build's
+version (ABS: <semver>-dev.<branch>.<date>.<time>.<sha>) can put a "." or "-"
+at the 63rd character; a label value may not end on either, so trim both.
 */}}
 {{- define "chart" -}}
-{{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" -}}
+{{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimAll "-." -}}
 {{- end -}}
 
 {{/*
