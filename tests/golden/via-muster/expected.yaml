@@ -1,0 +1,93 @@
+---
+# Source: agent-platform-mcps/templates/agentgateway-backend.yaml
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayBackend
+metadata:
+  name: agent-platform-mcps
+  namespace: agent-platform
+  labels:
+    app: "agent-platform-mcps"
+    app.kubernetes.io/name: "agent-platform-mcps"
+    app.kubernetes.io/instance: "agent-platform-mcps"
+    app.kubernetes.io/managed-by: "Helm"
+    app.kubernetes.io/version: "0.0.1"
+    application.giantswarm.io/team: "team-bumblebee"
+    helm.sh/chart: "agent-platform-mcps-0.5.0"
+spec:
+  # Front muster: a SINGLE target pointing at muster's aggregator MCP endpoint.
+  # muster fans out to every server and runs all per-server auth / exchange; the
+  # verified inbound token is forwarded so muster sees the caller's identity.
+  mcp:
+    targets:
+      - name: muster
+        static:
+          host: "muster.agent-platform.svc.cluster.local"
+          port: 8090
+          path: "/mcp"
+          protocol: StreamableHTTP
+          policies:
+            # forward the verified inbound token to muster.
+            auth:
+              passthrough: {}
+---
+# Source: agent-platform-mcps/templates/agentgateway-viamuster-timeouts.yaml
+# Upstream timeouts for the muster target. agentgateway's default upstream
+# request timeout is shorter than muster's per-server timeouts (an MCPServer's
+# spec.timeout goes up to 300 s), so without this policy a long-running
+# tools/call is cut with "upstream call timeout" while the backend completes.
+# Attached via sectionName, the way the exchange policies attach per target.
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayPolicy
+metadata:
+  name: agent-platform-mcps-timeouts
+  namespace: agent-platform
+  labels:
+    app: "agent-platform-mcps"
+    app.kubernetes.io/name: "agent-platform-mcps"
+    app.kubernetes.io/instance: "agent-platform-mcps"
+    app.kubernetes.io/managed-by: "Helm"
+    app.kubernetes.io/version: "0.0.1"
+    application.giantswarm.io/team: "team-bumblebee"
+    helm.sh/chart: "agent-platform-mcps-0.5.0"
+spec:
+  targetRefs:
+    - group: agentgateway.dev
+      kind: AgentgatewayBackend
+      name: agent-platform-mcps
+      sectionName: muster
+  backend:
+    http:
+      requestTimeout: "300s"
+      connectTimeout: "10s"
+---
+# Source: agent-platform-mcps/templates/agentgateway-viamuster-routes.yaml
+# Route the agentgateway data-plane Gateway to the AgentgatewayBackend.
+# The public ingress HTTPRoute (cluster ingress gateway -> agentgateway Service)
+# is owned by the agent-platform umbrella chart (gateway.httpRoute).
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: agent-platform-mcps
+  namespace: agent-platform
+  labels:
+    app: "agent-platform-mcps"
+    app.kubernetes.io/name: "agent-platform-mcps"
+    app.kubernetes.io/instance: "agent-platform-mcps"
+    app.kubernetes.io/managed-by: "Helm"
+    app.kubernetes.io/version: "0.0.1"
+    application.giantswarm.io/team: "team-bumblebee"
+    helm.sh/chart: "agent-platform-mcps-0.5.0"
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: "agentgateway"
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - group: agentgateway.dev
+          kind: AgentgatewayBackend
+          name: agent-platform-mcps

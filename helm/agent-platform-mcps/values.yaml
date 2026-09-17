@@ -49,6 +49,18 @@ agentgateway:
   # -- In-cluster muster aggregator endpoint. Required when viaMuster: true.
   # Typically http://<release>-muster.<namespace>.svc.cluster.local:8090/mcp
   musterUrl: ""
+  # -- Upstream timeouts of the proxy for the muster target -- only used when
+  # viaMuster: true. Rendered as an AgentgatewayPolicy (spec.backend.http) on the
+  # AgentgatewayBackend's muster target. Without it agentgateway applies its
+  # default upstream request timeout to every tools/call and cuts long-running
+  # tools with 'upstream call timeout' although the backend completes.
+  viaMusterTimeouts:
+    # -- Upstream request timeout for a tools/call to muster (Go duration).
+    # Must cover muster's own per-server timeout (an MCPServer's spec.timeout,
+    # up to 300 s) so a tool call may run as long as muster allows.
+    request: 300s
+    # -- Timeout for establishing the connection to muster (Go duration).
+    connect: 10s
   # -- Name of the agentgateway data-plane Gateway CR in the release namespace.
   # An HTTPRoute is rendered on this Gateway connecting it to the AgentgatewayBackend.
   # The public ingress HTTPRoute (cluster ingress → agentgateway Service) is

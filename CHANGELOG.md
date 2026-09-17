@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - `helm.sh/chart` label on branch builds: ABS versions a branch build `<semver>-dev.<branch>.<date>.<time>.<sha>` and the label is `<name>-<version>` cut to 63 characters. When the cut landed on a `.` (a 12-character branch name for this chart) the value was not a valid label value and the API server rejected every labelled object. The helper now trims trailing `.` and `-` (`trimAll "-."`), and `make verify-render` packages the chart with such a version and asserts the rendered label values stay valid.
+- `agentgateway.viaMuster: true` rendered no request-timeout policy for the muster backend, so agentgateway's default upstream request timeout cut long-running `tools/call`s (a repository set-up that creates the repository, pushes the scaffold and opens a pull request in one call) with `upstream call timeout` while muster's `CallTool` saw `context canceled` and the backend had completed. The chart now renders an `AgentgatewayPolicy` on the backend's `muster` target (`spec.backend.http`) with `requestTimeout` and `connectTimeout` from `agentgateway.viaMusterTimeouts` (defaults `300s` / `10s`, covering muster's per-server `spec.timeout` of up to 300 s); nothing changes without `viaMuster`. Golden case `tests/golden/via-muster`.
 
 ### Removed
 

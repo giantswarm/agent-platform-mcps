@@ -1,0 +1,10 @@
+# Golden case: the viaMuster topology. One AgentgatewayBackend whose single
+# target is muster, the HTTPRoute on the data-plane Gateway, and the timeouts
+# policy on the muster target (spec.backend.http) at the chart's defaults --
+# the request timeout must keep covering muster's per-server timeouts. No
+# exchange policies (muster owns downstream exchange) and no auth policy
+# (oauthMode passthrough).
+agentgateway:
+  enabled: true
+  viaMuster: true
+  musterUrl: http://muster.agent-platform.svc.cluster.local:8090/mcp
