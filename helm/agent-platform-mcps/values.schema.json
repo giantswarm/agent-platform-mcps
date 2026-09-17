@@ -110,12 +110,12 @@
                 },
                 "viaMusterTimeouts": {
                     "type": "object",
-                    "description": "Upstream timeouts of the proxy for the muster target -- only used when viaMuster: true. Rendered as an AgentgatewayPolicy (spec.backend.http) on the AgentgatewayBackend's muster target. Without it agentgateway applies its default upstream request timeout to every tools/call and cuts long-running tools with 'upstream call timeout' although the backend completes.",
+                    "description": "Upstream timeouts of the proxy for the muster target -- only used when viaMuster: true. Rendered as one AgentgatewayPolicy on the AgentgatewayBackend's muster target: request under spec.backend.http.requestTimeout, connect under spec.backend.tcp.connectTimeout (where the CRD declares each). Without it agentgateway applies its default upstream request timeout to every tools/call and cuts long-running tools with 'upstream call timeout' although the backend completes.",
                     "additionalProperties": false,
                     "properties": {
                         "connect": {
                             "type": "string",
-                            "description": "Timeout for establishing the connection to muster (Go duration)."
+                            "description": "Deadline for establishing the TCP connection to muster (Go duration)."
                         },
                         "request": {
                             "type": "string",
