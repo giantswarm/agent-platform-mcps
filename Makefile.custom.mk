@@ -16,6 +16,19 @@ RENDER_OUT ?= /tmp/agent-platform-mcps-render
 # branch). For this chart's name a 12-character branch puts the "." exactly at
 # position 63, so this version exercises the helper's trailing-character trim.
 LABEL_GUARD_VERSION ?= 0.9.0-dev.chart-labels.2026-09-07.17-06-51.1772009
+# The agentgateway CRDs the rendered agentgateway.dev objects are validated
+# against: the giantswarm/agentgateway chart release the fleet runs (its crds/
+# directory carries the CRD patches the packaged chart applies, so it is the
+# schema the API server holds, not upstream's). Bump with the fleet.
+AGENTGATEWAY_CRDS_VERSION ?= v2.1.2
+AGENTGATEWAY_CRDS_URL ?= https://raw.githubusercontent.com/giantswarm/agentgateway/$(AGENTGATEWAY_CRDS_VERSION)/helm/agentgateway/crds
+AGENTGATEWAY_CRDS ?= agentgateway.dev_agentgatewaybackends.yaml agentgateway.dev_agentgatewaypolicies.yaml
+# kubectl-validate (kubernetes-sigs) validates a manifest against a CRD's
+# structural schema the way the API server does, unknown fields refused --
+# what server-side apply on kind does at install time and what a pruning API
+# server hides. Taken from PATH when present, otherwise downloaded once.
+KUBECTL_VALIDATE_VERSION ?= v0.0.4
+KUBECTL_VALIDATE ?= $(shell command -v kubectl-validate 2>/dev/null || echo $(RENDER_OUT)/bin/kubectl-validate)
 
 # The chart renders CRs only, so its contract is the rendered YAML: every
 # tests/golden/<case>/values.yaml renders byte for byte into expected.yaml
@@ -24,9 +37,13 @@ LABEL_GUARD_VERSION ?= 0.9.0-dev.chart-labels.2026-09-07.17-06-51.1772009
 # first line (`# expect: <substring>`); the schema is skipped there so the
 # template-time guard itself is what gets exercised. The label guard packages
 # the chart with LABEL_GUARD_VERSION (as ABS does on a branch) and asserts every
-# rendered `helm.sh/chart` value is a valid label value.
+# rendered `helm.sh/chart` value is a valid label value. The CRD guard validates
+# every agentgateway.dev object of every golden render against the agentgateway
+# CRDs at AGENTGATEWAY_CRDS_VERSION with unknown fields refused: a field the
+# CRD does not declare fails here instead of being pruned by one API server and
+# refused by another at install time.
 .PHONY: verify-render
-verify-render: ## Diff every tests/golden case against its expected.yaml, assert the tests/guards cases fail with their expected message, and assert helm.sh/chart stays a valid label value for a branch-build version.
+verify-render: ## Diff every tests/golden case against its expected.yaml, assert the tests/guards cases fail with their expected message, assert helm.sh/chart stays a valid label value for a branch-build version, and validate the rendered agentgateway.dev objects against the agentgateway CRDs.
 	@echo "====> $@ ($(CHART_DIR))"
 	@mkdir -p $(RENDER_OUT)
 	@set -e; for d in $(GOLDEN_DIR)/*/; do \
@@ -60,6 +77,24 @@ verify-render: ## Diff every tests/golden case against its expected.yaml, assert
 			fi; \
 		done; \
 		echo "ok: guard helm.sh/chart label ($$labels)"
+	@set -e; mkdir -p $(RENDER_OUT)/crds $(RENDER_OUT)/bin; \
+		for f in $(AGENTGATEWAY_CRDS); do \
+			[ -s $(RENDER_OUT)/crds/$(AGENTGATEWAY_CRDS_VERSION)-$$f ] || curl -fsSL -o $(RENDER_OUT)/crds/$(AGENTGATEWAY_CRDS_VERSION)-$$f $(AGENTGATEWAY_CRDS_URL)/$$f; \
+		done; \
+		if [ ! -x "$(KUBECTL_VALIDATE)" ]; then \
+			os=$$(uname -s | tr '[:upper:]' '[:lower:]'); arch=$$(uname -m | sed -e 's/x86_64/amd64/' -e 's/aarch64/arm64/'); \
+			curl -fsSL https://github.com/kubernetes-sigs/kubectl-validate/releases/download/$(KUBECTL_VALIDATE_VERSION)/kubectl-validate_$${os}_$${arch}.tar.gz | tar xz -C $(RENDER_OUT)/bin kubectl-validate; \
+		fi; \
+		for d in $(GOLDEN_DIR)/*/; do \
+			c=$$(basename $$d); \
+			awk -v RS='\n---\n' '/apiVersion: agentgateway\.dev\//{sub(/^---\n/,""); printf "---\n%s\n", $$0}' $(RENDER_OUT)/$$c.yaml > $(RENDER_OUT)/$$c.agentgateway.yaml; \
+			n=$$(grep -c '^kind:' $(RENDER_OUT)/$$c.agentgateway.yaml || true); \
+			[ "$$n" -gt 0 ] || { echo "ok: guard agentgateway CRDs $$c (no agentgateway.dev objects)"; continue; }; \
+			if ! $(KUBECTL_VALIDATE) --local-crds $(RENDER_OUT)/crds $(RENDER_OUT)/$$c.agentgateway.yaml; then \
+				echo "FAIL: golden case $$c renders an agentgateway.dev object the agentgateway $(AGENTGATEWAY_CRDS_VERSION) CRDs do not accept"; exit 1; \
+			fi; \
+			echo "ok: guard agentgateway CRDs $$c ($$n objects)"; \
+		done
 
 .PHONY: update-golden
 update-golden: ## Re-render every tests/golden/<case>/expected.yaml from its values.yaml. Review the diff before committing.
