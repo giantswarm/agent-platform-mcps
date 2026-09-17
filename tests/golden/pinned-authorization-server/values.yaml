@@ -44,3 +44,23 @@ mcpServers:
           name: ghe-oauth-client
           clientIdKey: id
           clientSecretKey: secret
+  # A second GitHub App at the same authorization server: the issuer is the
+  # App's own identity, so its grant does not collide with the login App's
+  # under https://github.com/login/oauth, and expectedIssuer carries the iss
+  # GitHub actually puts on the authorization response.
+  - cluster: gazelle
+    group: marge
+    url: http://marge.marge.svc.cluster.local:8080/mcp
+    timeout: 120
+    toolPrefix: marge
+    auth:
+      mode: oauth
+      authorizationServer:
+        issuer: https://github.com/apps/giantswarm-marge
+        expectedIssuer: https://github.com/login/oauth
+        authorizationEndpoint: https://github.com/login/oauth/authorize
+        tokenEndpoint: https://github.com/login/oauth/access_token
+        clientCredentialsSecretRef:
+          name: giantswarm-marge-oauth-client
+          namespace: agent-platform
+        grantScope: subject

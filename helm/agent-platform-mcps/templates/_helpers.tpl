@@ -74,7 +74,7 @@ the entry's auth.authorizationServer block.
 */}}
 {{- define "mcp.authorizationServer" -}}
 {{- $as := .as -}}
-{{- $known := list "issuer" "authorizationEndpoint" "tokenEndpoint" "scopes" "clientCredentialsSecretRef" "grantScope" -}}
+{{- $known := list "issuer" "expectedIssuer" "authorizationEndpoint" "tokenEndpoint" "scopes" "clientCredentialsSecretRef" "grantScope" -}}
 {{- range $k, $_ := $as -}}
 {{- if not (has $k $known) -}}
 {{- fail (printf "mcpServers entry %q: unknown auth.authorizationServer key %q (want one of %s)" $.name $k (join ", " $known)) -}}
@@ -94,6 +94,9 @@ the entry's auth.authorizationServer block.
 {{- end -}}
 authorizationServer:
   issuer: {{ $as.issuer }}
+  {{- with $as.expectedIssuer }}
+  expectedIssuer: {{ . }}
+  {{- end }}
   {{- with $as.authorizationEndpoint }}
   authorizationEndpoint: {{ . }}
   {{- end }}

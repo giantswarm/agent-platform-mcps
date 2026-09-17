@@ -285,6 +285,9 @@
                                             }
                                         }
                                     },
+                                    "expectedIssuer": {
+                                        "type": "string"
+                                    },
                                     "grantScope": {
                                         "type": "string",
                                         "enum": [

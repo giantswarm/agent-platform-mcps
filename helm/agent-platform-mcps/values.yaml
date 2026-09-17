@@ -192,6 +192,14 @@ identityProviders: {}
 # is session (default) or subject; clientCredentialsSecretRef.namespace
 # defaults to the MCPServer's namespace. Keys other than these fail the render.
 #
+# issuer is the identity the grant is filed under, so two OAuth clients of one
+# authorization server hold two separate grants. expectedIssuer is the value
+# muster compares the RFC 9207 `iss` of the authorization response against; it
+# defaults to issuer. The two differ when a GitHub App is pinned under its own
+# identity (https://github.com/apps/<slug>) while GitHub puts
+# https://github.com/login/oauth in `iss`. Without expectedIssuer that sign-in
+# is refused for an iss mismatch. Needs the muster chart >= 5.27.0.
+#
 # Example entries:
 #   # Same-cluster server, the Dex token forwarded as-is. The backend
 #   # validates it against Dex's JWKS; muster is not an issuer.
