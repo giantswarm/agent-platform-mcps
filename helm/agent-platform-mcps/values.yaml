@@ -142,6 +142,13 @@ defaults:
   # -- Audiences required at the upstream for oauth-authenticated servers.
   audiences:
     - dex-k8s-authenticator
+  # -- Annotate every rendered MCPServer with `helm.sh/resource-policy: keep`:
+  # Helm then leaves the object in the cluster when its entry is removed from
+  # mcpServers or the release is uninstalled, instead of deleting it. Turn it on
+  # before a server moves from this list to an MCPServer applied by other means
+  # (gitops), so the object survives the move with its identity intact. A
+  # per-entry `keep` overrides it.
+  keep: false
 
 # @schema additionalProperties: {type: object, additionalProperties: false, required: [tokenEndpoint], properties: {tokenEndpoint: {type: string}, expectedIssuer: {type: string}, connectorId: {type: string}, scopes: {type: string}, credentialsSecret: {type: object, additionalProperties: false, properties: {name: {type: string}, namespace: {type: string}, clientIdKey: {type: string}, clientSecretKey: {type: string}}}}}
 # -- Identity providers, defined once and referenced by servers via auth.provider.
@@ -168,11 +175,11 @@ defaults:
 #       clientSecretKey: client-secret
 identityProviders: {}
 
-# @schema item: object; itemRequired: [cluster, group, url]; itemProperties: {cluster: {type: string}, group: {type: string}, url: {type: string}, name: {type: string}, namespace: {type: string}, transport: {type: string}, autoStart: {type: boolean}, timeout: {type: integer}, toolPrefix: {type: string}, toolGroup: {type: string, enum: [agent-platform, infrastructure]}, auth: {type: object, properties: {mode: {type: string, enum: [none, oauth, forward, exchange]}, provider: {type: string}, audiences: {type: array, items: {type: string}}, authorizationServer: {type: object, required: [issuer], properties: {issuer: {type: string}, expectedIssuer: {type: string}, authorizationEndpoint: {type: string}, tokenEndpoint: {type: string}, scopes: {type: string}, clientCredentialsSecretRef: {type: object, required: [name], properties: {name: {type: string}, namespace: {type: string}, clientIdKey: {type: string}, clientSecretKey: {type: string}}}, grantScope: {type: string, enum: [session, subject]}}}}}}
+# @schema item: object; itemRequired: [cluster, group, url]; itemProperties: {cluster: {type: string}, group: {type: string}, url: {type: string}, name: {type: string}, namespace: {type: string}, transport: {type: string}, autoStart: {type: boolean}, keep: {type: boolean}, timeout: {type: integer}, toolPrefix: {type: string}, toolGroup: {type: string, enum: [agent-platform, infrastructure]}, auth: {type: object, properties: {mode: {type: string, enum: [none, oauth, forward, exchange]}, provider: {type: string}, audiences: {type: array, items: {type: string}}, authorizationServer: {type: object, required: [issuer], properties: {issuer: {type: string}, expectedIssuer: {type: string}, authorizationEndpoint: {type: string}, tokenEndpoint: {type: string}, scopes: {type: string}, clientCredentialsSecretRef: {type: object, required: [name], properties: {name: {type: string}, namespace: {type: string}, clientIdKey: {type: string}, clientSecretKey: {type: string}}}, grantScope: {type: string, enum: [session, subject]}}}}}}
 # -- Flat list of MCP servers. Required fields per entry: cluster, group, url.
 # Optional: name (default <cluster>-mcp-<group>), namespace (default: the
-# release namespace), transport, autoStart, timeout, toolPrefix, toolGroup,
-# auth. The entry schema is closed: a key the chart does not read fails the
+# release namespace), transport, autoStart, keep, timeout, toolPrefix,
+# toolGroup, auth. The entry schema is closed: a key the chart does not read fails the
 # values check instead of being dropped silently.
 #
 # toolGroup overrides the tier the entry's group gets from muster.families
