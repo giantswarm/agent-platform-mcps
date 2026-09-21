@@ -5,6 +5,9 @@
 {{- $mode := $auth.mode | default "none" }}
 {{- $name := include "mcp.serverName" . }}
 {{- $namespace := .namespace | default $root.Release.Namespace }}
+{{- /* helm.sh/resource-policy: keep -- Helm leaves the object in place when the
+       entry leaves mcpServers or the release is uninstalled. */}}
+{{- $keep := ternary .keep $root.Values.defaults.keep (hasKey . "keep") }}
 {{- /* The Agent Platform tier: the entry's toolGroup, else its family's, else
        none -- the server is a Registered server. */}}
 {{- $toolGroup := "" }}
@@ -30,6 +33,10 @@ kind: MCPServer
 metadata:
   name: {{ $name }}
   namespace: {{ $namespace }}
+  {{- if $keep }}
+  annotations:
+    helm.sh/resource-policy: keep
+  {{- end }}
   labels:
     {{- include "labels.common" $root | nindent 4 }}
     muster.giantswarm.io/management-cluster: {{ .cluster }}

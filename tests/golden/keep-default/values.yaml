@@ -1,0 +1,17 @@
+# Golden case: helm.sh/resource-policy keep, chart-wide. defaults.keep: true
+# annotates every MCPServer; a per-entry keep: false wins over it. The other
+# golden cases carry the default (off) and render no annotations.
+defaults:
+  keep: true
+mcpServers:
+  - cluster: cluster-a
+    group: kubernetes
+    url: http://mcp-kubernetes.mcp-kubernetes.svc:8080/mcp
+    auth:
+      mode: forward
+  - cluster: cluster-a
+    group: runbooks
+    keep: false
+    url: http://mcp-runbooks.mcp-runbooks.svc.cluster.local:8080/mcp
+    auth:
+      mode: none

@@ -1,0 +1,14 @@
+# Golden case: helm.sh/resource-policy keep, per entry. With defaults.keep off
+# (the chart default) only the entry that sets keep: true is annotated.
+mcpServers:
+  - cluster: cluster-a
+    group: kubernetes
+    keep: true
+    url: http://mcp-kubernetes.mcp-kubernetes.svc:8080/mcp
+    auth:
+      mode: forward
+  - cluster: cluster-a
+    group: runbooks
+    url: http://mcp-runbooks.mcp-runbooks.svc.cluster.local:8080/mcp
+    auth:
+      mode: none
