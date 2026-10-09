@@ -50,6 +50,7 @@ mcpServers:
   # GitHub actually puts on the authorization response.
   - cluster: gazelle
     group: marge
+    name: mcp-marge
     url: http://marge.marge.svc.cluster.local:8080/mcp
     timeout: 120
     toolPrefix: marge

@@ -98,7 +98,7 @@ spec:
 apiVersion: muster.giantswarm.io/v1alpha1
 kind: MCPServer
 metadata:
-  name: gazelle-mcp-marge
+  name: mcp-marge
   namespace: agent-platform
   labels:
     app: "agent-platform-mcps"

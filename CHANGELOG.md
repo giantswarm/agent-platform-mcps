@@ -18,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The golden case `tests/golden/pinned-authorization-server` names its marge server `mcp-marge` (explicit `name`), the name the fleet's marge MCP server carries now that the installation prefix is gone. Tool names are unchanged.
+
 - Chart renamed from `agentic-platform-mcps` to `agent-platform-mcps`. The published OCI path changes to `oci://gsoci.azurecr.io/charts/giantswarm/agent-platform-mcps`; the last release under the old name is 0.6.3. Chart description now uses the product name "Giant Swarm Agent Platform".
 
 ### Fixed
