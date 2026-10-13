@@ -119,7 +119,7 @@
                         },
                         "request": {
                             "type": "string",
-                            "description": "Upstream request timeout for a tools/call to muster (Go duration). Must cover muster's own per-server timeout (an MCPServer's spec.timeout, up to 300 s) so a tool call may run as long as muster allows."
+                            "description": "Upstream request timeout for a tools/call to muster (Go duration). agentgateway's deadline for muster's response to start, not for the call to end. muster starts it with the final answer, or with the event stream at a call's first progress notification; from then on this deadline no longer applies, so a call kept alive by progress (spec.progress.maxDuration, up to 3600 s) is never cut here. A call answers or reports progress within its MCPServer's spec.timeout (up to 300 s), so this must cover that: 300s."
                         }
                     }
                 }
