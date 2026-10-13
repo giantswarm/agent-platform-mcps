@@ -31,13 +31,14 @@ spec:
               passthrough: {}
 ---
 # Source: agent-platform-mcps/templates/agentgateway-viamuster-timeouts.yaml
-# Upstream timeouts for the muster target. muster bounds a tools/call itself:
-# an MCPServer's spec.timeout (up to 300 s) is the idle cut, restarted by each
-# progress notification up to spec.progress.maxDuration (at most 3600 s). The
-# request deadline here is the outer ceiling and must cover that maximum;
-# below it, agentgateway cuts a call muster keeps alive with "upstream call
-# timeout" while the backend completes. agentgateway has no per-request idle
-# timeout, so the cut of a silent call stays muster's.
+# Upstream timeouts for the muster target. The request deadline is
+# agentgateway's limit for muster's response to start: without this policy
+# agentgateway's shorter default cuts a tools/call that answers late with
+# "upstream call timeout" while the backend completes. muster starts the
+# response with the answer, or with the event stream at the first progress
+# notification, both within an MCPServer's spec.timeout (up to 300 s); a call
+# kept alive by progress past that (spec.progress.maxDuration) streams and is
+# not bounded by this deadline.
 # Attached via sectionName, the way the exchange policies attach per target.
 # The CRD declares the request deadline under spec.backend.http and the
 # connect deadline under spec.backend.tcp; a field rendered elsewhere is pruned
@@ -63,7 +64,7 @@ spec:
       sectionName: muster
   backend:
     http:
-      requestTimeout: "3600s"
+      requestTimeout: "300s"
     tcp:
       connectTimeout: "10s"
 ---
