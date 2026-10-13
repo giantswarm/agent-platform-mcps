@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `agentgateway.viaMusterTimeouts.request` defaults to `3600s` (was `300s`): muster keeps a `tools/call` that reports progress alive past an MCPServer's `spec.timeout`, up to its `spec.progress.maxDuration` (at most 3600 s, the MCPServer CRD's ceiling), and the 300 s gateway deadline cut such a call with `upstream call timeout`. The gateway deadline is the outer ceiling; agentgateway has no per-request idle timeout, so the cut of a silent call stays muster's `spec.timeout`. The values, schema and template comments state that relation.
 - The golden case `tests/golden/pinned-authorization-server` names its marge server `mcp-marge` (explicit `name`), the name the fleet's marge MCP server carries now that the installation prefix is gone. Tool names are unchanged.
 
 - Chart renamed from `agentic-platform-mcps` to `agent-platform-mcps`. The published OCI path changes to `oci://gsoci.azurecr.io/charts/giantswarm/agent-platform-mcps`; the last release under the old name is 0.6.3. Chart description now uses the product name "Giant Swarm Agent Platform".
