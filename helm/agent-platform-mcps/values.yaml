@@ -22,8 +22,9 @@ muster:
   # `mcpServers[].toolGroup` overrides the group's tier per entry.
   # `displayName` is the human-friendly name of the group's servers, stamped as
   # the annotation `ui.giantswarm.io/display-name` on every server of the group;
-  # the Dev Portal shows it for the family. A group without a `displayName`
-  # renders no annotation. `mcpServers[].displayName` overrides it per entry.
+  # the Dev Portal shows it for the family. A group without a `displayName`, or
+  # with an empty one, renders no annotation; a blank one (only whitespace)
+  # fails the render. `mcpServers[].displayName` overrides it per entry.
   families:
     kubernetes:
       instanceArg: management_cluster
@@ -207,8 +208,9 @@ identityProviders: {}
 # muster.families (for example to name a server of an unlisted group),
 # rendered as the annotation ui.giantswarm.io/display-name. The Dev Portal
 # shows a family under the display name its members agree on, so a family
-# member rarely sets its own. An entry whose group has no displayName and that
-# sets none renders no annotation.
+# member rarely sets its own. An entry that sets displayName to "" renders no
+# annotation, whatever its group's; one that sets none and whose group has none
+# renders none either. A blank value (only whitespace) fails the render.
 #
 # auth.mode selects how muster authenticates to the server: none, oauth
 # (muster runs its own OAuth login against the server's authorization server
