@@ -8,6 +8,8 @@
 {{- /* helm.sh/resource-policy: keep -- Helm leaves the object in place when the
        entry leaves mcpServers or the release is uninstalled. */}}
 {{- $keep := ternary .keep $root.Values.defaults.keep (hasKey . "keep") }}
+{{- /* The entry's family settings; empty for a group muster.families does not list. */}}
+{{- $fam := index $root.Values.muster.families .group | default dict }}
 {{- /* The Agent Platform tier: the entry's toolGroup, else its family's, else
        none -- the server is a Registered server. */}}
 {{- $toolGroup := "" }}
@@ -15,12 +17,19 @@
 {{- if .toolGroup }}
 {{- $toolGroup = .toolGroup }}
 {{- $toolGroupSource = printf "mcpServers entry %q: toolGroup" $name }}
-{{- else if hasKey $root.Values.muster.families .group }}
-{{- $toolGroup = (index $root.Values.muster.families .group).toolGroup | default "" }}
+{{- else if $fam.toolGroup }}
+{{- $toolGroup = $fam.toolGroup }}
 {{- $toolGroupSource = printf "muster.families.%s.toolGroup" .group }}
 {{- end }}
 {{- if and $toolGroup (not (has $toolGroup (list "agent-platform" "infrastructure"))) }}
 {{- fail (printf "%s: unknown tool group \"%v\" (want agent-platform|infrastructure)" $toolGroupSource $toolGroup) }}
+{{- end }}
+{{- /* The Dev Portal's display name: the entry's displayName when it sets the
+       key, else its family's. Empty renders no annotation. */}}
+{{- $displayName := ternary .displayName ($fam.displayName | default "") (hasKey . "displayName") }}
+{{- $displayNameSource := ternary (printf "mcpServers entry %q: displayName" $name) (printf "muster.families.%s.displayName" .group) (hasKey . "displayName") }}
+{{- if and $displayName (not (trim $displayName)) }}
+{{- fail (printf "%s: blank display name %q (want a name, or \"\" for none)" $displayNameSource $displayName) }}
 {{- end }}
 {{- /* Default audiences apply to token-propagating modes; others only if explicit. */}}
 {{- $audiences := $auth.audiences }}
@@ -33,9 +42,14 @@ kind: MCPServer
 metadata:
   name: {{ $name }}
   namespace: {{ $namespace }}
-  {{- if $keep }}
+  {{- if or $keep $displayName }}
   annotations:
+    {{- if $keep }}
     helm.sh/resource-policy: keep
+    {{- end }}
+    {{- with $displayName }}
+    ui.giantswarm.io/display-name: {{ . | quote }}
+    {{- end }}
   {{- end }}
   labels:
     {{- include "labels.common" $root | nindent 4 }}
@@ -101,7 +115,6 @@ spec:
       {{- toYaml . | nindent 6 }}
     {{- end }}
   {{- if hasKey $root.Values.muster.families .group }}
-  {{- $fam := index $root.Values.muster.families .group }}
   family:
     name: {{ .group }}
     {{- with $fam.instanceArg }}

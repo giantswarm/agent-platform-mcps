@@ -1,0 +1,11 @@
+# expect: muster.families.kubernetes.displayName: blank display name " "
+muster:
+  families:
+    kubernetes:
+      displayName: " "
+mcpServers:
+  - cluster: cluster-a
+    group: kubernetes
+    url: http://mcp-kubernetes.mcp-kubernetes.svc:8080/mcp
+    auth:
+      mode: forward

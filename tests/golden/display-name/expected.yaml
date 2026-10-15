@@ -1,0 +1,207 @@
+---
+# Source: agent-platform-mcps/templates/muster-mcpserver.yaml
+apiVersion: muster.giantswarm.io/v1alpha1
+kind: MCPServer
+metadata:
+  name: cluster-a-mcp-kubernetes
+  namespace: agent-platform
+  annotations:
+    ui.giantswarm.io/display-name: "Kubernetes"
+  labels:
+    app: "agent-platform-mcps"
+    app.kubernetes.io/name: "agent-platform-mcps"
+    app.kubernetes.io/instance: "agent-platform-mcps"
+    app.kubernetes.io/managed-by: "Helm"
+    app.kubernetes.io/version: "0.0.1"
+    application.giantswarm.io/team: "team-bumblebee"
+    helm.sh/chart: "agent-platform-mcps-0.5.0"
+    muster.giantswarm.io/management-cluster: cluster-a
+    muster.giantswarm.io/type: mcp-kubernetes
+    agent-platform.giantswarm.io/tool-group: infrastructure
+spec:
+  autoStart: true
+  type: streamable-http
+  url: http://mcp-kubernetes.mcp-kubernetes.svc:8080/mcp
+  auth:
+    type: oauth
+    forwardToken: true
+    requiredAudiences:
+      - dex-k8s-authenticator
+  family:
+    name: kubernetes
+    instanceArg: management_cluster
+---
+# Source: agent-platform-mcps/templates/muster-mcpserver.yaml
+apiVersion: muster.giantswarm.io/v1alpha1
+kind: MCPServer
+metadata:
+  name: cluster-b-mcp-kubernetes
+  namespace: agent-platform
+  annotations:
+    helm.sh/resource-policy: keep
+    ui.giantswarm.io/display-name: "Kubernetes"
+  labels:
+    app: "agent-platform-mcps"
+    app.kubernetes.io/name: "agent-platform-mcps"
+    app.kubernetes.io/instance: "agent-platform-mcps"
+    app.kubernetes.io/managed-by: "Helm"
+    app.kubernetes.io/version: "0.0.1"
+    application.giantswarm.io/team: "team-bumblebee"
+    helm.sh/chart: "agent-platform-mcps-0.5.0"
+    muster.giantswarm.io/management-cluster: cluster-b
+    muster.giantswarm.io/type: mcp-kubernetes
+    agent-platform.giantswarm.io/tool-group: infrastructure
+spec:
+  autoStart: true
+  type: streamable-http
+  url: http://mcp-kubernetes.cluster-b.example.com/mcp
+  auth:
+    type: oauth
+    forwardToken: true
+    requiredAudiences:
+      - dex-k8s-authenticator
+  family:
+    name: kubernetes
+    instanceArg: management_cluster
+---
+# Source: agent-platform-mcps/templates/muster-mcpserver.yaml
+apiVersion: muster.giantswarm.io/v1alpha1
+kind: MCPServer
+metadata:
+  name: cluster-c-mcp-kubernetes
+  namespace: agent-platform
+  labels:
+    app: "agent-platform-mcps"
+    app.kubernetes.io/name: "agent-platform-mcps"
+    app.kubernetes.io/instance: "agent-platform-mcps"
+    app.kubernetes.io/managed-by: "Helm"
+    app.kubernetes.io/version: "0.0.1"
+    application.giantswarm.io/team: "team-bumblebee"
+    helm.sh/chart: "agent-platform-mcps-0.5.0"
+    muster.giantswarm.io/management-cluster: cluster-c
+    muster.giantswarm.io/type: mcp-kubernetes
+    agent-platform.giantswarm.io/tool-group: infrastructure
+spec:
+  autoStart: true
+  type: streamable-http
+  url: http://mcp-kubernetes.cluster-c.example.com/mcp
+  auth:
+    type: oauth
+    forwardToken: true
+    requiredAudiences:
+      - dex-k8s-authenticator
+  family:
+    name: kubernetes
+    instanceArg: management_cluster
+---
+# Source: agent-platform-mcps/templates/muster-mcpserver.yaml
+apiVersion: muster.giantswarm.io/v1alpha1
+kind: MCPServer
+metadata:
+  name: cluster-a-mcp-prometheus
+  namespace: agent-platform
+  annotations:
+    ui.giantswarm.io/display-name: "Prometheus (MC)"
+  labels:
+    app: "agent-platform-mcps"
+    app.kubernetes.io/name: "agent-platform-mcps"
+    app.kubernetes.io/instance: "agent-platform-mcps"
+    app.kubernetes.io/managed-by: "Helm"
+    app.kubernetes.io/version: "0.0.1"
+    application.giantswarm.io/team: "team-bumblebee"
+    helm.sh/chart: "agent-platform-mcps-0.5.0"
+    muster.giantswarm.io/management-cluster: cluster-a
+    muster.giantswarm.io/type: mcp-prometheus
+    agent-platform.giantswarm.io/tool-group: infrastructure
+spec:
+  autoStart: true
+  type: streamable-http
+  url: http://mcp-prometheus.mcp-prometheus.svc:8080/mcp
+  auth:
+    type: oauth
+    forwardToken: true
+    requiredAudiences:
+      - dex-k8s-authenticator
+  family:
+    name: prometheus
+    instanceArg: management_cluster
+---
+# Source: agent-platform-mcps/templates/muster-mcpserver.yaml
+apiVersion: muster.giantswarm.io/v1alpha1
+kind: MCPServer
+metadata:
+  name: cluster-a-mcp-capi
+  namespace: agent-platform
+  labels:
+    app: "agent-platform-mcps"
+    app.kubernetes.io/name: "agent-platform-mcps"
+    app.kubernetes.io/instance: "agent-platform-mcps"
+    app.kubernetes.io/managed-by: "Helm"
+    app.kubernetes.io/version: "0.0.1"
+    application.giantswarm.io/team: "team-bumblebee"
+    helm.sh/chart: "agent-platform-mcps-0.5.0"
+    muster.giantswarm.io/management-cluster: cluster-a
+    muster.giantswarm.io/type: mcp-capi
+    agent-platform.giantswarm.io/tool-group: infrastructure
+spec:
+  autoStart: true
+  type: streamable-http
+  url: http://mcp-capi.mcp-capi.svc:8080/mcp
+  auth:
+    type: oauth
+    forwardToken: true
+    requiredAudiences:
+      - dex-k8s-authenticator
+  family:
+    name: capi
+    instanceArg: management_cluster
+---
+# Source: agent-platform-mcps/templates/muster-mcpserver.yaml
+apiVersion: muster.giantswarm.io/v1alpha1
+kind: MCPServer
+metadata:
+  name: github
+  namespace: agent-platform
+  annotations:
+    ui.giantswarm.io/display-name: "GitHub"
+  labels:
+    app: "agent-platform-mcps"
+    app.kubernetes.io/name: "agent-platform-mcps"
+    app.kubernetes.io/instance: "agent-platform-mcps"
+    app.kubernetes.io/managed-by: "Helm"
+    app.kubernetes.io/version: "0.0.1"
+    application.giantswarm.io/team: "team-bumblebee"
+    helm.sh/chart: "agent-platform-mcps-0.5.0"
+    muster.giantswarm.io/management-cluster: cluster-a
+    muster.giantswarm.io/type: mcp-github
+spec:
+  autoStart: true
+  type: streamable-http
+  url: https://api.githubcopilot.com/mcp/
+  auth:
+    type: none
+    forwardToken: false
+---
+# Source: agent-platform-mcps/templates/muster-mcpserver.yaml
+apiVersion: muster.giantswarm.io/v1alpha1
+kind: MCPServer
+metadata:
+  name: kagi-search
+  namespace: agent-platform
+  labels:
+    app: "agent-platform-mcps"
+    app.kubernetes.io/name: "agent-platform-mcps"
+    app.kubernetes.io/instance: "agent-platform-mcps"
+    app.kubernetes.io/managed-by: "Helm"
+    app.kubernetes.io/version: "0.0.1"
+    application.giantswarm.io/team: "team-bumblebee"
+    helm.sh/chart: "agent-platform-mcps-0.5.0"
+    muster.giantswarm.io/management-cluster: cluster-a
+    muster.giantswarm.io/type: mcp-kagi
+spec:
+  autoStart: true
+  type: streamable-http
+  url: http://kagi-search.agent-platform.svc:8080/mcp
+  auth:
+    type: none
+    forwardToken: false

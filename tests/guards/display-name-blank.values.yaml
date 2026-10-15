@@ -1,0 +1,8 @@
+# expect: mcpServers entry "cluster-a-mcp-kubernetes": displayName: blank display name "  "
+mcpServers:
+  - cluster: cluster-a
+    group: kubernetes
+    displayName: "  "
+    url: http://mcp-kubernetes.mcp-kubernetes.svc:8080/mcp
+    auth:
+      mode: forward
