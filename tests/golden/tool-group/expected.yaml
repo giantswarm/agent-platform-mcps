@@ -5,6 +5,8 @@ kind: MCPServer
 metadata:
   name: cluster-a-mcp-kubernetes
   namespace: agent-platform
+  annotations:
+    ui.giantswarm.io/display-name: "Kubernetes"
   labels:
     app: "agent-platform-mcps"
     app.kubernetes.io/name: "agent-platform-mcps"
@@ -35,6 +37,8 @@ kind: MCPServer
 metadata:
   name: cluster-a-mcp-kubernetes-platform
   namespace: agent-platform
+  annotations:
+    ui.giantswarm.io/display-name: "Kubernetes"
   labels:
     app: "agent-platform-mcps"
     app.kubernetes.io/name: "agent-platform-mcps"
@@ -65,6 +69,8 @@ kind: MCPServer
 metadata:
   name: cluster-a-mcp-capi
   namespace: agent-platform
+  annotations:
+    ui.giantswarm.io/display-name: "Cluster API"
   labels:
     app: "agent-platform-mcps"
     app.kubernetes.io/name: "agent-platform-mcps"

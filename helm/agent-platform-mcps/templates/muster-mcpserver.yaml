@@ -22,6 +22,14 @@
 {{- if and $toolGroup (not (has $toolGroup (list "agent-platform" "infrastructure"))) }}
 {{- fail (printf "%s: unknown tool group \"%v\" (want agent-platform|infrastructure)" $toolGroupSource $toolGroup) }}
 {{- end }}
+{{- /* The Dev Portal's display name: the entry's displayName, else its
+       family's, else none -- no annotation. */}}
+{{- $displayName := "" }}
+{{- if .displayName }}
+{{- $displayName = .displayName }}
+{{- else if hasKey $root.Values.muster.families .group }}
+{{- $displayName = (index $root.Values.muster.families .group).displayName | default "" }}
+{{- end }}
 {{- /* Default audiences apply to token-propagating modes; others only if explicit. */}}
 {{- $audiences := $auth.audiences }}
 {{- if and (not $audiences) (or (eq $mode "forward") (eq $mode "exchange")) }}
@@ -33,9 +41,14 @@ kind: MCPServer
 metadata:
   name: {{ $name }}
   namespace: {{ $namespace }}
-  {{- if $keep }}
+  {{- if or $keep $displayName }}
   annotations:
+    {{- if $keep }}
     helm.sh/resource-policy: keep
+    {{- end }}
+    {{- with $displayName }}
+    ui.giantswarm.io/display-name: {{ . | quote }}
+    {{- end }}
   {{- end }}
   labels:
     {{- include "labels.common" $root | nindent 4 }}

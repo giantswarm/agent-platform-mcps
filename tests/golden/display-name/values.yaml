@@ -1,0 +1,47 @@
+# Golden case: the Dev Portal display name annotation. The family default
+# (muster.families.<group>.displayName) names every kubernetes and capi server,
+# a per-entry displayName wins over it, the family default itself is a value
+# (prometheus renamed here) and can be emptied (capi), an entry of an unlisted
+# group renders no annotation unless it sets one, and the annotation merges
+# with helm.sh/resource-policy: keep.
+muster:
+  families:
+    prometheus:
+      displayName: Prometheus (MC)
+    capi:
+      displayName: ""
+mcpServers:
+  - cluster: cluster-a
+    group: kubernetes
+    url: http://mcp-kubernetes.mcp-kubernetes.svc:8080/mcp
+    auth:
+      mode: forward
+  - cluster: cluster-b
+    group: kubernetes
+    keep: true
+    url: http://mcp-kubernetes.cluster-b.example.com/mcp
+    auth:
+      mode: forward
+  - cluster: cluster-a
+    group: prometheus
+    url: http://mcp-prometheus.mcp-prometheus.svc:8080/mcp
+    auth:
+      mode: forward
+  - cluster: cluster-a
+    group: capi
+    url: http://mcp-capi.mcp-capi.svc:8080/mcp
+    auth:
+      mode: forward
+  - cluster: cluster-a
+    group: github
+    name: github
+    displayName: GitHub
+    url: https://api.githubcopilot.com/mcp/
+    auth:
+      mode: none
+  - cluster: cluster-a
+    group: kagi
+    name: kagi-search
+    url: http://kagi-search.agent-platform.svc:8080/mcp
+    auth:
+      mode: none
