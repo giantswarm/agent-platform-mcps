@@ -7,28 +7,75 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.0-rc.1] - 2026-10-15
+
 ### Added
 
 - `ui.giantswarm.io/display-name` on the rendered muster MCPServer CRs: the server's human-friendly name, which the Dev Portal shows for the server's family. `muster.families.<group>.displayName` sets it for every server of a family (chart defaults `Kubernetes`, `Prometheus` and `Cluster API`), `mcpServers[].displayName` overrides it per entry, and an entry's `""` drops its family's. Without a display name no annotation renders; a blank one (only whitespace) fails the render. It merges with `helm.sh/resource-policy: keep`. Golden case `tests/golden/display-name`, guard cases `tests/guards/display-name-*`.
-- `auth.authorizationServer.expectedIssuer` on `mcpServers` entries, rendered into the MCPServer's `spec.auth.authorizationServer.expectedIssuer` (muster >= 5.27.0). `issuer` is the identity the grant is filed under, so two OAuth clients of one authorization server hold two separate grants; `expectedIssuer` is what muster compares the RFC 9207 `iss` of the authorization response against, and defaults to `issuer`. The two differ when a GitHub App is pinned under its own identity (`https://github.com/apps/<slug>`) while GitHub puts `https://github.com/login/oauth` in `iss`; without it that sign-in is refused for an iss mismatch. Golden case `tests/golden/pinned-authorization-server`.
-- `agent-platform.giantswarm.io/tool-group` on the rendered muster MCPServer CRs, next to `muster.giantswarm.io/type`: the Agent Platform's MCP server tier. `muster.families.<group>.toolGroup` sets it for every server of a family (chart default `infrastructure` for kubernetes, prometheus and capi), `mcpServers[].toolGroup` overrides it per entry; an entry whose group has no `toolGroup` and that sets none renders no tier label (a Registered server). Allowed values `agent-platform` and `infrastructure` -- the values schema and a render-time guard refuse anything else.
-- `auth.authorizationServer` for `auth.mode: oauth` entries: pin an authorization server muster can neither discover nor register with (GitHub) -- `issuer`, `authorizationEndpoint`/`tokenEndpoint` (both or neither), `scopes`, `clientCredentialsSecretRef` and `grantScope: session|subject` are rendered into the MCPServer's `spec.auth.authorizationServer` (muster >= 5.8.0). A missing issuer, a lone endpoint, an unknown `grantScope` or an unknown key fails the render with the entry's name.
-- A closed per-entry schema for `mcpServers` in `values.schema.json` (`cluster`, `group`, `url` required; `name`, `namespace`, `transport`, `autoStart`, `timeout`, `toolPrefix`, `auth.{mode,provider,audiences,authorizationServer}`): a key the chart does not read fails the values check instead of being dropped silently.
-- `make verify-render`: golden renders under `tests/golden/` and fail-guard cases under `tests/guards/`, run on branches by the `verify-render` CircleCI job.
-- `defaults.keep` and the per-entry `mcpServers[].keep`: when true the rendered MCPServer carries `helm.sh/resource-policy: keep`, so Helm leaves the object in the cluster when its entry is removed from `mcpServers` (or the release is uninstalled) instead of deleting it. Default false: nothing changes on an existing installation by the release alone. Turn it on before moving a server from the values list to an MCPServer applied by other means, so the object keeps its identity (uid) through the move. Golden cases `tests/golden/keep-default` and `tests/golden/keep-per-entry`.
+
+## [0.11.5-rc.9] - 2026-10-13
+
+### Fixed
+
+- The comments on `agentgateway.viaMusterTimeouts.request` (values, schema, template) said it must cover how long muster lets a call run. It is agentgateway's deadline for muster's response to start: muster starts it with the answer, or with the event stream at the first progress notification, both within an MCPServer's `spec.timeout` (up to 300 s), so a call muster keeps alive by progress up to `spec.progress.maxDuration` (muster >= 5.40.0, up to 3600 s) streams past it uncut. The default stays `300s`.
+
+## [0.11.5-rc.5] - 2026-10-09
 
 ### Changed
 
 - The golden case `tests/golden/pinned-authorization-server` names its marge server `mcp-marge` (explicit `name`), the name the fleet's marge MCP server carries now that the installation prefix is gone. Tool names are unchanged.
 
-- Chart renamed from `agentic-platform-mcps` to `agent-platform-mcps`. The published OCI path changes to `oci://gsoci.azurecr.io/charts/giantswarm/agent-platform-mcps`; the last release under the old name is 0.6.3. Chart description now uses the product name "Giant Swarm Agent Platform".
+## [0.11.0] - 2026-09-21
+
+### Added
+
+- `defaults.keep` and the per-entry `mcpServers[].keep`: when true the rendered MCPServer carries `helm.sh/resource-policy: keep`, so Helm leaves the object in the cluster when its entry is removed from `mcpServers` (or the release is uninstalled) instead of deleting it. Default false: nothing changes on an existing installation by the release alone. Turn it on before moving a server from the values list to an MCPServer applied by other means, so the object keeps its identity (uid) through the move. Golden cases `tests/golden/keep-default` and `tests/golden/keep-per-entry`.
+
+## [0.10.1] - 2026-09-17
 
 ### Fixed
 
-- The comments on `agentgateway.viaMusterTimeouts.request` (values, schema, template) said it must cover how long muster lets a call run. It is agentgateway's deadline for muster's response to start: muster starts it with the answer, or with the event stream at the first progress notification, both within an MCPServer's `spec.timeout` (up to 300 s), so a call muster keeps alive by progress up to `spec.progress.maxDuration` (muster >= 5.40.0, up to 3600 s) streams past it uncut. The default stays `300s`.
 - The viaMuster timeouts policy rendered `connectTimeout` under `spec.backend.http`, a field the `AgentgatewayPolicy` CRD (agentgateway 2.1.x) does not declare there -- it declares `spec.backend.http.requestTimeout` and `spec.backend.tcp.connectTimeout`. An API server that prunes unknown fields applied the policy without the connect timeout while the HelmRelease reported success; one whose server-side apply refuses unknown fields (kind) failed the upgrade with `failed to create typed patch object` and helm-controller rolled the release back to 0.9.3 on every reconcile. The connect timeout now renders under `spec.backend.tcp.connectTimeout`; `viaMusterTimeouts` and the defaults are unchanged. `make verify-render` now validates every rendered `agentgateway.dev` object against the agentgateway CRDs at a pinned chart release (`AGENTGATEWAY_CRDS_VERSION`, kubectl-validate) with unknown fields refused.
-- `helm.sh/chart` label on branch builds: ABS versions a branch build `<semver>-dev.<branch>.<date>.<time>.<sha>` and the label is `<name>-<version>` cut to 63 characters. When the cut landed on a `.` (a 12-character branch name for this chart) the value was not a valid label value and the API server rejected every labelled object. The helper now trims trailing `.` and `-` (`trimAll "-."`), and `make verify-render` packages the chart with such a version and asserts the rendered label values stay valid.
+
+## [0.10.0] - 2026-09-17
+
+### Added
+
+- `auth.authorizationServer.expectedIssuer` on `mcpServers` entries, rendered into the MCPServer's `spec.auth.authorizationServer.expectedIssuer` (muster >= 5.27.0). `issuer` is the identity the grant is filed under, so two OAuth clients of one authorization server hold two separate grants; `expectedIssuer` is what muster compares the RFC 9207 `iss` of the authorization response against, and defaults to `issuer`. The two differ when a GitHub App is pinned under its own identity (`https://github.com/apps/<slug>`) while GitHub puts `https://github.com/login/oauth` in `iss`; without it that sign-in is refused for an iss mismatch. Golden case `tests/golden/pinned-authorization-server`.
+
+## [0.9.4] - 2026-09-17
+
+### Fixed
+
 - `agentgateway.viaMuster: true` rendered no request-timeout policy for the muster backend, so agentgateway's default upstream request timeout cut long-running `tools/call`s (a repository set-up that creates the repository, pushes the scaffold and opens a pull request in one call) with `upstream call timeout` while muster's `CallTool` saw `context canceled` and the backend had completed. The chart now renders an `AgentgatewayPolicy` on the backend's `muster` target (`spec.backend.http`) with `requestTimeout` and `connectTimeout` from `agentgateway.viaMusterTimeouts` (defaults `300s` / `10s`, covering muster's per-server `spec.timeout` of up to 300 s); nothing changes without `viaMuster`. Golden case `tests/golden/via-muster`.
+
+## [0.9.1] - 2026-09-07
+
+### Fixed
+
+- `helm.sh/chart` label on branch builds: ABS versions a branch build `<semver>-dev.<branch>.<date>.<time>.<sha>` and the label is `<name>-<version>` cut to 63 characters. When the cut landed on a `.` (a 12-character branch name for this chart) the value was not a valid label value and the API server rejected every labelled object. The helper now trims trailing `.` and `-` (`trimAll "-."`), and `make verify-render` packages the chart with such a version and asserts the rendered label values stay valid.
+
+## [0.9.0] - 2026-09-07
+
+### Added
+
+- `agent-platform.giantswarm.io/tool-group` on the rendered muster MCPServer CRs, next to `muster.giantswarm.io/type`: the Agent Platform's MCP server tier. `muster.families.<group>.toolGroup` sets it for every server of a family (chart default `infrastructure` for kubernetes, prometheus and capi), `mcpServers[].toolGroup` overrides it per entry; an entry whose group has no `toolGroup` and that sets none renders no tier label (a Registered server). Allowed values `agent-platform` and `infrastructure` -- the values schema and a render-time guard refuse anything else.
+
+## [0.7.0] - 2026-09-04
+
+### Added
+
+- `auth.authorizationServer` for `auth.mode: oauth` entries: pin an authorization server muster can neither discover nor register with (GitHub) -- `issuer`, `authorizationEndpoint`/`tokenEndpoint` (both or neither), `scopes`, `clientCredentialsSecretRef` and `grantScope: session|subject` are rendered into the MCPServer's `spec.auth.authorizationServer` (muster >= 5.8.0). A missing issuer, a lone endpoint, an unknown `grantScope` or an unknown key fails the render with the entry's name.
+- A closed per-entry schema for `mcpServers` in `values.schema.json` (`cluster`, `group`, `url` required; `name`, `namespace`, `transport`, `autoStart`, `timeout`, `toolPrefix`, `auth.{mode,provider,audiences,authorizationServer}`): a key the chart does not read fails the values check instead of being dropped silently.
+- `make verify-render`: golden renders under `tests/golden/` and fail-guard cases under `tests/guards/`, run on branches by the `verify-render` CircleCI job.
+
+## [0.6.4] - 2026-08-20
+
+### Changed
+
+- Chart renamed from `agentic-platform-mcps` to `agent-platform-mcps`. The published OCI path changes to `oci://gsoci.azurecr.io/charts/giantswarm/agent-platform-mcps`; the last release under the old name is 0.6.3. Chart description now uses the product name "Giant Swarm Agent Platform".
+
+## [0.6.2] - 2026-07-15
 
 ### Removed
 
@@ -125,8 +172,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `Gateway`, `HTTPRoute` (routing) and inbound caller (JWT) validation are owned by the
   agentgateway deployer, not this chart — it emits no resource that references a `Gateway`.
 
-[Unreleased]: https://github.com/giantswarm/agentic-platform-mcps/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/giantswarm/agentic-platform-mcps/compare/v0.12.0-rc.1...HEAD
 [0.4.0]: https://github.com/giantswarm/agentic-platform-mcps/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/giantswarm/agentic-platform-mcps/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/giantswarm/agentic-platform-mcps/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/giantswarm/agentic-platform-mcps/releases/tag/v0.1.0
+[0.12.0-rc.1]: https://github.com/giantswarm/agentic-platform-mcps/compare/v0.11.5-rc.9...v0.12.0-rc.1
+[0.11.5-rc.9]: https://github.com/giantswarm/agentic-platform-mcps/compare/v0.11.5-rc.5...v0.11.5-rc.9
+[0.11.5-rc.5]: https://github.com/giantswarm/agentic-platform-mcps/compare/v0.11.0...v0.11.5-rc.5
+[0.11.0]: https://github.com/giantswarm/agentic-platform-mcps/compare/v0.10.1...v0.11.0
+[0.10.1]: https://github.com/giantswarm/agentic-platform-mcps/compare/v0.10.0...v0.10.1
+[0.10.0]: https://github.com/giantswarm/agentic-platform-mcps/compare/v0.9.4...v0.10.0
+[0.9.4]: https://github.com/giantswarm/agentic-platform-mcps/compare/v0.9.1...v0.9.4
+[0.9.1]: https://github.com/giantswarm/agentic-platform-mcps/compare/v0.9.0...v0.9.1
+[0.9.0]: https://github.com/giantswarm/agentic-platform-mcps/compare/v0.7.0...v0.9.0
+[0.7.0]: https://github.com/giantswarm/agentic-platform-mcps/compare/v0.6.4...v0.7.0
+[0.6.4]: https://github.com/giantswarm/agentic-platform-mcps/compare/v0.6.2...v0.6.4
+[0.6.2]: https://github.com/giantswarm/agentic-platform-mcps/compare/v0.5.0...v0.6.2
