@@ -3,3 +3,6 @@ vendor
 
 # graphify knowledge graph (regenerable, rebuilt by the post-commit hook)
 graphify-out/
+
+# verify-render output and its downloaded CRDs and kubectl-validate (RENDER_OUT)
+.render/
