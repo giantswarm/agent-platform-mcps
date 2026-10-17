@@ -11,7 +11,9 @@ HELM ?= helm
 # CI pins Helm v3 (the golden files are v3 output; v4 renders a blank line
 # before each `---`), so the render check refuses any other major with a reason.
 HELM_MAJOR ?= 3
-RENDER_OUT ?= /tmp/agent-platform-mcps-render
+# Render output and the downloaded CRDs and kubectl-validate stay in the
+# repository's git-ignored .render/, never in a shared /tmp.
+RENDER_OUT ?= $(CURDIR)/.render
 # ABS versions a branch build `<semver>-dev.<branch>.<YYYY-MM-DD>.<HH-MM-SS>.<sha>`
 # and `helm.sh/chart` is `<name>-<version>` cut to 63 characters. When the cut
 # lands on a "." the label value is invalid and the API server rejects every
