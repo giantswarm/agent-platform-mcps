@@ -8,6 +8,9 @@ CHART_DIR ?= helm/agent-platform-mcps
 GOLDEN_DIR ?= tests/golden
 GUARDS_DIR ?= tests/guards
 HELM ?= helm
+# CI pins Helm v3 (the golden files are v3 output; v4 renders a blank line
+# before each `---`), so the render check refuses any other major with a reason.
+HELM_MAJOR ?= 3
 RENDER_OUT ?= /tmp/agent-platform-mcps-render
 # ABS versions a branch build `<semver>-dev.<branch>.<YYYY-MM-DD>.<HH-MM-SS>.<sha>`
 # and `helm.sh/chart` is `<name>-<version>` cut to 63 characters. When the cut
@@ -45,6 +48,8 @@ KUBECTL_VALIDATE ?= $(shell command -v kubectl-validate 2>/dev/null || echo $(RE
 .PHONY: verify-render
 verify-render: ## Diff every tests/golden case against its expected.yaml, assert the tests/guards cases fail with their expected message, assert helm.sh/chart stays a valid label value for a branch-build version, and validate the rendered agentgateway.dev objects against the agentgateway CRDs.
 	@echo "====> $@ ($(CHART_DIR))"
+	@v=$$($(HELM) version --template '{{.Version}}' 2>/dev/null); \
+		case "$$v" in v$(HELM_MAJOR).*) ;; *) echo "needs Helm v$(HELM_MAJOR) (found '$$v' from '$(HELM)'); the golden files are Helm v$(HELM_MAJOR) output, CI pins v3.17.3. Run with HELM=<path to a v$(HELM_MAJOR) binary>."; exit 1;; esac
 	@mkdir -p $(RENDER_OUT)
 	@set -e; for d in $(GOLDEN_DIR)/*/; do \
 		c=$$(basename $$d); \
