@@ -16,7 +16,8 @@ muster:
   # `toolGroup` is the group's tier on the Agent Platform, stamped as the label
   # `agent-platform.giantswarm.io/tool-group` on every server of the group:
   # `infrastructure` (the servers for the management clusters the platform
-  # runs on -- the chart default for kubernetes, prometheus and capi) or
+  # runs on -- the chart default for kubernetes, prometheus, capi and
+  # policy-reporter) or
   # `agent-platform` (the platform's own management surface). A group without
   # a `toolGroup` renders no tier label: its servers are Registered servers.
   # `mcpServers[].toolGroup` overrides the group's tier per entry.
@@ -44,6 +45,12 @@ muster:
       toolGroup: infrastructure  # @schema enum: [agent-platform, infrastructure]
       # -- Display name of every capi server.
       displayName: Cluster API
+    policy-reporter:
+      instanceArg: management_cluster
+      # -- Tier label value for every policy-reporter server.
+      toolGroup: infrastructure  # @schema enum: [agent-platform, infrastructure]
+      # -- Display name of every policy-reporter server.
+      displayName: Policy Reporter
 
 # -- Render agentgateway CRs for the via-muster topology.
 # When viaMuster is true the traffic flow is:

@@ -394,7 +394,7 @@
                 },
                 "families": {
                     "type": "object",
-                    "description": "Groups that muster exposes as instance families. A server whose `group` is listed here gets a muster `family` block; unlisted groups are singletons. `toolGroup` is the group's tier on the Agent Platform, stamped as the label `agent-platform.giantswarm.io/tool-group` on every server of the group: `infrastructure` (the servers for the management clusters the platform `agent-platform` (the platform's own management surface). A group without a `toolGroup` renders no tier label: its servers are Registered servers. `mcpServers[].toolGroup` overrides the group's tier per entry. `displayName` is the human-friendly name of the group's servers, stamped as the annotation `ui.giantswarm.io/display-name` on every server of the group; the Dev Portal shows it for the family. A group without a `displayName`, or with an empty one, renders no annotation; a blank one (only whitespace) fails the render. `mcpServers[].displayName` overrides it per entry.",
+                    "description": "Groups that muster exposes as instance families. A server whose `group` is listed here gets a muster `family` block; unlisted groups are singletons. `toolGroup` is the group's tier on the Agent Platform, stamped as the label `agent-platform.giantswarm.io/tool-group` on every server of the group: `infrastructure` (the servers for the management clusters the platform policy-reporter) or `agent-platform` (the platform's own management surface). A group without a `toolGroup` renders no tier label: its servers are Registered servers. `mcpServers[].toolGroup` overrides the group's tier per entry. `displayName` is the human-friendly name of the group's servers, stamped as the annotation `ui.giantswarm.io/display-name` on every server of the group; the Dev Portal shows it for the family. A group without a `displayName`, or with an empty one, renders no annotation; a blank one (only whitespace) fails the render. `mcpServers[].displayName` overrides it per entry.",
                     "additionalProperties": false,
                     "properties": {
                         "capi": {
@@ -432,6 +432,27 @@
                                 "toolGroup": {
                                     "type": "string",
                                     "description": "Tier label value for every kubernetes server.",
+                                    "enum": [
+                                        "agent-platform",
+                                        "infrastructure"
+                                    ]
+                                }
+                            }
+                        },
+                        "policy-reporter": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "displayName": {
+                                    "type": "string",
+                                    "description": "Display name of every policy-reporter server."
+                                },
+                                "instanceArg": {
+                                    "type": "string"
+                                },
+                                "toolGroup": {
+                                    "type": "string",
+                                    "description": "Tier label value for every policy-reporter server.",
                                     "enum": [
                                         "agent-platform",
                                         "infrastructure"

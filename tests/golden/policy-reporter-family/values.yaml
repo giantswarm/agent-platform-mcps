@@ -1,0 +1,16 @@
+# Golden case: the policy-reporter family from the chart defaults. Every
+# management cluster's Policy Reporter MCP server joins one muster family
+# (x_policy-reporter_* with management_cluster), stamped infrastructure and
+# displayed as "Policy Reporter" -- the hub's own server in-cluster, a private
+# installation's through its tunnelport RemoteApp.
+mcpServers:
+  - cluster: cluster-a
+    group: policy-reporter
+    url: http://kyverno-policy-reporter.kyverno:9090/mcp
+    auth:
+      mode: none
+  - cluster: cluster-b
+    group: policy-reporter
+    url: https://mcp-policy-reporter-cluster-b.agent-platform.svc.cluster.local:8443/mcp
+    auth:
+      mode: none
