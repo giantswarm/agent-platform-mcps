@@ -22,6 +22,7 @@ spec:
   autoStart: true
   type: streamable-http
   url: http://mcp-kubernetes.mcp-kubernetes.svc:8080/mcp
+  description: "Resources, events and pod logs of a management cluster, and the health of its workload clusters, read as the signed-in person"
   auth:
     type: oauth
     forwardToken: true
@@ -55,6 +56,7 @@ spec:
   autoStart: true
   type: streamable-http
   url: http://mcp-kubernetes.cluster-b.example.com/mcp
+  description: "Resources, events and pod logs of a management cluster, and the health of its workload clusters, read as the signed-in person"
   auth:
     type: oauth
     forwardToken: true
@@ -85,6 +87,7 @@ spec:
   autoStart: true
   type: streamable-http
   url: http://mcp-kubernetes.cluster-c.example.com/mcp
+  description: "Resources, events and pod logs of a management cluster, and the health of its workload clusters, read as the signed-in person"
   auth:
     type: oauth
     forwardToken: true
@@ -117,6 +120,7 @@ spec:
   autoStart: true
   type: streamable-http
   url: http://mcp-prometheus.mcp-prometheus.svc:8080/mcp
+  description: "Metrics of a management cluster, read as the signed-in person: PromQL queries, series and labels, alerts and rules, and the scrape targets"
   auth:
     type: oauth
     forwardToken: true
@@ -147,6 +151,7 @@ spec:
   autoStart: true
   type: streamable-http
   url: http://mcp-capi.mcp-capi.svc:8080/mcp
+  description: "Workload clusters of a management cluster, read as the signed-in person: their status and health, machines and node pools, on AWS, Azure, GCP and vSphere"
   auth:
     type: oauth
     forwardToken: true

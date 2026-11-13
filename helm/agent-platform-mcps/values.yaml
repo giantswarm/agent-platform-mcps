@@ -25,6 +25,11 @@ muster:
   # the Dev Portal shows it for the family. A group without a `displayName`, or
   # with an empty one, renders no annotation; a blank one (only whitespace)
   # fails the render. `mcpServers[].displayName` overrides it per entry.
+  # `description` says what the group's servers offer, rendered as
+  # `spec.description` on every server of the group; the Dev Portal shows it
+  # under the family's name, so it does not repeat the name. Empty and blank
+  # values behave as for `displayName`; `mcpServers[].description` overrides it
+  # per entry.
   families:
     kubernetes:
       instanceArg: management_cluster
@@ -32,18 +37,24 @@ muster:
       toolGroup: infrastructure  # @schema enum: [agent-platform, infrastructure]
       # -- Display name of every kubernetes server.
       displayName: Kubernetes
+      # -- Description of every kubernetes server.
+      description: "Resources, events and pod logs of a management cluster, and the health of its workload clusters, read as the signed-in person"
     prometheus:
       instanceArg: management_cluster
       # -- Tier label value for every prometheus server.
       toolGroup: infrastructure  # @schema enum: [agent-platform, infrastructure]
       # -- Display name of every prometheus server.
       displayName: Prometheus
+      # -- Description of every prometheus server.
+      description: "Metrics of a management cluster, read as the signed-in person: PromQL queries, series and labels, alerts and rules, and the scrape targets"
     capi:
       instanceArg: management_cluster
       # -- Tier label value for every capi server.
       toolGroup: infrastructure  # @schema enum: [agent-platform, infrastructure]
       # -- Display name of every capi server.
       displayName: Cluster API
+      # -- Description of every capi server.
+      description: "Workload clusters of a management cluster, read as the signed-in person: their status and health, machines and node pools, on AWS, Azure, GCP and vSphere"
 
 # -- Render agentgateway CRs for the via-muster topology.
 # When viaMuster is true the traffic flow is:
@@ -190,12 +201,13 @@ defaults:
 #       clientSecretKey: client-secret
 identityProviders: {}
 
-# @schema item: object; itemRequired: [cluster, group, url]; itemProperties: {cluster: {type: string}, group: {type: string}, url: {type: string}, name: {type: string}, namespace: {type: string}, transport: {type: string}, autoStart: {type: boolean}, keep: {type: boolean}, timeout: {type: integer}, toolPrefix: {type: string}, toolGroup: {type: string, enum: [agent-platform, infrastructure]}, displayName: {type: string}, auth: {type: object, properties: {mode: {type: string, enum: [none, oauth, forward, exchange]}, provider: {type: string}, audiences: {type: array, items: {type: string}}, authorizationServer: {type: object, required: [issuer], properties: {issuer: {type: string}, expectedIssuer: {type: string}, authorizationEndpoint: {type: string}, tokenEndpoint: {type: string}, scopes: {type: string}, clientCredentialsSecretRef: {type: object, required: [name], properties: {name: {type: string}, namespace: {type: string}, clientIdKey: {type: string}, clientSecretKey: {type: string}}}, grantScope: {type: string, enum: [session, subject]}}}}}}
+# @schema item: object; itemRequired: [cluster, group, url]; itemProperties: {cluster: {type: string}, group: {type: string}, url: {type: string}, name: {type: string}, namespace: {type: string}, transport: {type: string}, autoStart: {type: boolean}, keep: {type: boolean}, timeout: {type: integer}, toolPrefix: {type: string}, toolGroup: {type: string, enum: [agent-platform, infrastructure]}, displayName: {type: string}, description: {type: string}, auth: {type: object, properties: {mode: {type: string, enum: [none, oauth, forward, exchange]}, provider: {type: string}, audiences: {type: array, items: {type: string}}, authorizationServer: {type: object, required: [issuer], properties: {issuer: {type: string}, expectedIssuer: {type: string}, authorizationEndpoint: {type: string}, tokenEndpoint: {type: string}, scopes: {type: string}, clientCredentialsSecretRef: {type: object, required: [name], properties: {name: {type: string}, namespace: {type: string}, clientIdKey: {type: string}, clientSecretKey: {type: string}}}, grantScope: {type: string, enum: [session, subject]}}}}}}
 # -- Flat list of MCP servers. Required fields per entry: cluster, group, url.
 # Optional: name (default <cluster>-mcp-<group>), namespace (default: the
 # release namespace), transport, autoStart, keep, timeout, toolPrefix,
-# toolGroup, displayName, auth. The entry schema is closed: a key the chart
-# does not read fails the values check instead of being dropped silently.
+# toolGroup, displayName, description, auth. The entry schema is closed: a key
+# the chart does not read fails the values check instead of being dropped
+# silently.
 #
 # toolGroup overrides the tier the entry's group gets from muster.families
 # (agent-platform or infrastructure), rendered as the label
@@ -211,6 +223,10 @@ identityProviders: {}
 # member rarely sets its own. An entry that sets displayName to "" renders no
 # annotation, whatever its group's; one that sets none and whose group has none
 # renders none either. A blank value (only whitespace) fails the render.
+#
+# description overrides the description the entry's group gets from
+# muster.families, rendered as spec.description, with the same rules for ""
+# and blank values as displayName.
 #
 # auth.mode selects how muster authenticates to the server: none, oauth
 # (muster runs its own OAuth login against the server's authorization server
