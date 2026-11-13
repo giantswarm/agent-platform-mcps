@@ -22,6 +22,7 @@ spec:
   autoStart: true
   type: streamable-http
   url: http://mcp-kubernetes.mcp-kubernetes.svc:8080/mcp
+  description: "Resources, events and pod logs of a management cluster and the health of its workload clusters, read-only"
   auth:
     type: oauth
     forwardToken: true
@@ -54,6 +55,7 @@ spec:
   autoStart: true
   type: streamable-http
   url: http://mcp-kubernetes.mcp-kubernetes.svc:8080/mcp
+  description: "Resources, events and pod logs of a management cluster and the health of its workload clusters, read-only"
   auth:
     type: oauth
     forwardToken: true
@@ -86,6 +88,7 @@ spec:
   autoStart: true
   type: streamable-http
   url: http://mcp-capi.mcp-capi.svc:8080/mcp
+  description: "Workload clusters of a management cluster, read-only: their status and health, machines and node pools, on AWS, Azure, GCP and vSphere"
   auth:
     type: oauth
     forwardToken: true

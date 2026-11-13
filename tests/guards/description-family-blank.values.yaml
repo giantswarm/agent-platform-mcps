@@ -1,0 +1,11 @@
+# expect: muster.families.kubernetes.description: blank description " "
+muster:
+  families:
+    kubernetes:
+      description: " "
+mcpServers:
+  - cluster: cluster-a
+    group: kubernetes
+    url: http://mcp-kubernetes.mcp-kubernetes.svc:8080/mcp
+    auth:
+      mode: forward

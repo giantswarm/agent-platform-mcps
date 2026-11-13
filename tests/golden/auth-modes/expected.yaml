@@ -22,6 +22,7 @@ spec:
   autoStart: true
   type: streamable-http
   url: http://mcp-kubernetes.mcp-kubernetes.svc:8080/mcp
+  description: "Resources, events and pod logs of a management cluster and the health of its workload clusters, read-only"
   timeout: 30
   auth:
     type: oauth
@@ -55,6 +56,7 @@ spec:
   autoStart: true
   type: streamable-http
   url: https://mcp-prometheus-cluster-b.agent-platform.svc.cluster.local:8443/mcp
+  description: "Metrics of a management cluster, read-only: PromQL queries, series and labels, alerts and rules, and the scrape targets"
   timeout: 30
   auth:
     type: oauth
@@ -150,6 +152,7 @@ spec:
   autoStart: true
   type: streamable-http
   url: http://mcp-capi.mcp-capi.svc:8080/mcp
+  description: "Workload clusters of a management cluster, read-only: their status and health, machines and node pools, on AWS, Azure, GCP and vSphere"
   timeout: 30
   auth:
     type: oauth
@@ -183,6 +186,7 @@ spec:
   autoStart: true
   type: streamable-http
   url: https://mcp-prometheus-cluster-b.agent-platform.svc.cluster.local:8443/mcp
+  description: "Metrics of a management cluster, read-only: PromQL queries, series and labels, alerts and rules, and the scrape targets"
   timeout: 30
   auth:
     type: oauth
