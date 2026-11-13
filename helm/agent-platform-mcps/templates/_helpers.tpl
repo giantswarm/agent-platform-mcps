@@ -153,3 +153,18 @@ context. Examples assume "https://mcp-kubernetes.cluster.example.io/mcp".
 /
 {{- end -}}
 {{- end -}}
+
+{{/*
+A Dev Portal text of an mcpServers entry (key: displayName or description): the
+entry's when it sets the key, else its family's, else "". A blank value (only
+whitespace) fails the render, named after where it was set.
+*/}}
+{{- define "mcp.familyText" -}}
+{{- $set := hasKey .entry .key -}}
+{{- $v := ternary (get .entry .key) (get .fam .key | default "") $set -}}
+{{- if and $v (not (trim $v)) -}}
+{{- $source := ternary (printf "mcpServers entry %q: %s" .name .key) (printf "muster.families.%s.%s" .entry.group .key) $set -}}
+{{- fail (printf "%s: blank %s %q (want %s, or \"\" for none)" $source .what $v .want) -}}
+{{- end -}}
+{{- $v -}}
+{{- end -}}

@@ -27,9 +27,11 @@ muster:
   # fails the render. `mcpServers[].displayName` overrides it per entry.
   # `description` says what the group's servers offer, rendered as
   # `spec.description` on every server of the group; the Dev Portal shows it
-  # under the family's name, so it does not repeat the name. Empty and blank
-  # values behave as for `displayName`; `mcpServers[].description` overrides it
-  # per entry.
+  # under the family's name, so it does not repeat the name. At most 500
+  # characters, the CRD's limit. Empty and blank values behave as for
+  # `displayName`; `mcpServers[].description` overrides it per entry. The
+  # descriptions say what the servers offer, not how they authenticate: the
+  # chart lets each entry choose its auth.mode.
   families:
     kubernetes:
       instanceArg: management_cluster
@@ -38,7 +40,7 @@ muster:
       # -- Display name of every kubernetes server.
       displayName: Kubernetes
       # -- Description of every kubernetes server.
-      description: "Resources, events and pod logs of a management cluster, and the health of its workload clusters, read as the signed-in person"
+      description: "Resources, events and pod logs of a management cluster and the health of its workload clusters, read-only"  # @schema maxLength: 500
     prometheus:
       instanceArg: management_cluster
       # -- Tier label value for every prometheus server.
@@ -46,7 +48,7 @@ muster:
       # -- Display name of every prometheus server.
       displayName: Prometheus
       # -- Description of every prometheus server.
-      description: "Metrics of a management cluster, read as the signed-in person: PromQL queries, series and labels, alerts and rules, and the scrape targets"
+      description: "Metrics of a management cluster, read-only: PromQL queries, series and labels, alerts and rules, and the scrape targets"  # @schema maxLength: 500
     capi:
       instanceArg: management_cluster
       # -- Tier label value for every capi server.
@@ -54,7 +56,7 @@ muster:
       # -- Display name of every capi server.
       displayName: Cluster API
       # -- Description of every capi server.
-      description: "Workload clusters of a management cluster, read as the signed-in person: their status and health, machines and node pools, on AWS, Azure, GCP and vSphere"
+      description: "Workload clusters of a management cluster, read-only: their status and health, machines and node pools, on AWS, Azure, GCP and vSphere"  # @schema maxLength: 500
 
 # -- Render agentgateway CRs for the via-muster topology.
 # When viaMuster is true the traffic flow is:
@@ -201,7 +203,7 @@ defaults:
 #       clientSecretKey: client-secret
 identityProviders: {}
 
-# @schema item: object; itemRequired: [cluster, group, url]; itemProperties: {cluster: {type: string}, group: {type: string}, url: {type: string}, name: {type: string}, namespace: {type: string}, transport: {type: string}, autoStart: {type: boolean}, keep: {type: boolean}, timeout: {type: integer}, toolPrefix: {type: string}, toolGroup: {type: string, enum: [agent-platform, infrastructure]}, displayName: {type: string}, description: {type: string}, auth: {type: object, properties: {mode: {type: string, enum: [none, oauth, forward, exchange]}, provider: {type: string}, audiences: {type: array, items: {type: string}}, authorizationServer: {type: object, required: [issuer], properties: {issuer: {type: string}, expectedIssuer: {type: string}, authorizationEndpoint: {type: string}, tokenEndpoint: {type: string}, scopes: {type: string}, clientCredentialsSecretRef: {type: object, required: [name], properties: {name: {type: string}, namespace: {type: string}, clientIdKey: {type: string}, clientSecretKey: {type: string}}}, grantScope: {type: string, enum: [session, subject]}}}}}}
+# @schema item: object; itemRequired: [cluster, group, url]; itemProperties: {cluster: {type: string}, group: {type: string}, url: {type: string}, name: {type: string}, namespace: {type: string}, transport: {type: string}, autoStart: {type: boolean}, keep: {type: boolean}, timeout: {type: integer}, toolPrefix: {type: string}, toolGroup: {type: string, enum: [agent-platform, infrastructure]}, displayName: {type: string}, description: {type: string, maxLength: 500}, auth: {type: object, properties: {mode: {type: string, enum: [none, oauth, forward, exchange]}, provider: {type: string}, audiences: {type: array, items: {type: string}}, authorizationServer: {type: object, required: [issuer], properties: {issuer: {type: string}, expectedIssuer: {type: string}, authorizationEndpoint: {type: string}, tokenEndpoint: {type: string}, scopes: {type: string}, clientCredentialsSecretRef: {type: object, required: [name], properties: {name: {type: string}, namespace: {type: string}, clientIdKey: {type: string}, clientSecretKey: {type: string}}}, grantScope: {type: string, enum: [session, subject]}}}}}}
 # -- Flat list of MCP servers. Required fields per entry: cluster, group, url.
 # Optional: name (default <cluster>-mcp-<group>), namespace (default: the
 # release namespace), transport, autoStart, keep, timeout, toolPrefix,
@@ -225,8 +227,12 @@ identityProviders: {}
 # renders none either. A blank value (only whitespace) fails the render.
 #
 # description overrides the description the entry's group gets from
-# muster.families, rendered as spec.description, with the same rules for ""
-# and blank values as displayName.
+# muster.families (for example to describe a server of an unlisted group),
+# rendered as spec.description, at most 500 characters. The Dev Portal shows a
+# family with the description of one of its members, so a family member that
+# sets its own makes the family's description depend on the member shown: a
+# family member rarely sets one. "" and blank values behave as for
+# displayName.
 #
 # auth.mode selects how muster authenticates to the server: none, oauth
 # (muster runs its own OAuth login against the server's authorization server

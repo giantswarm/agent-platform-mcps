@@ -24,20 +24,10 @@
 {{- if and $toolGroup (not (has $toolGroup (list "agent-platform" "infrastructure"))) }}
 {{- fail (printf "%s: unknown tool group \"%v\" (want agent-platform|infrastructure)" $toolGroupSource $toolGroup) }}
 {{- end }}
-{{- /* The Dev Portal's display name: the entry's displayName when it sets the
-       key, else its family's. Empty renders no annotation. */}}
-{{- $displayName := ternary .displayName ($fam.displayName | default "") (hasKey . "displayName") }}
-{{- $displayNameSource := ternary (printf "mcpServers entry %q: displayName" $name) (printf "muster.families.%s.displayName" .group) (hasKey . "displayName") }}
-{{- if and $displayName (not (trim $displayName)) }}
-{{- fail (printf "%s: blank display name %q (want a name, or \"\" for none)" $displayNameSource $displayName) }}
-{{- end }}
-{{- /* The Dev Portal's description: the entry's description when it sets the
-       key, else its family's. Empty renders none. */}}
-{{- $description := ternary .description ($fam.description | default "") (hasKey . "description") }}
-{{- $descriptionSource := ternary (printf "mcpServers entry %q: description" $name) (printf "muster.families.%s.description" .group) (hasKey . "description") }}
-{{- if and $description (not (trim $description)) }}
-{{- fail (printf "%s: blank description %q (want a description, or \"\" for none)" $descriptionSource $description) }}
-{{- end }}
+{{- /* The Dev Portal's display name and description: the entry's when it sets
+       the key, else its family's. Empty renders none. */}}
+{{- $displayName := include "mcp.familyText" (dict "entry" . "fam" $fam "name" $name "key" "displayName" "what" "display name" "want" "a name") }}
+{{- $description := include "mcp.familyText" (dict "entry" . "fam" $fam "name" $name "key" "description" "what" "description" "want" "a description") }}
 {{- /* Default audiences apply to token-propagating modes; others only if explicit. */}}
 {{- $audiences := $auth.audiences }}
 {{- if and (not $audiences) (or (eq $mode "forward") (eq $mode "exchange")) }}

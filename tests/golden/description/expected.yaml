@@ -22,7 +22,7 @@ spec:
   autoStart: true
   type: streamable-http
   url: http://mcp-kubernetes.mcp-kubernetes.svc:8080/mcp
-  description: "Resources, events and pod logs of a management cluster, and the health of its workload clusters, read as the signed-in person"
+  description: "Resources, events and pod logs of a management cluster and the health of its workload clusters, read-only"
   auth:
     type: oauth
     forwardToken: true
