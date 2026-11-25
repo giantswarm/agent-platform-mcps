@@ -1,0 +1,52 @@
+# Golden case: the tool approval (spec.approval). The family default
+# (muster.families.<group>.approval) renders on every server of kubernetes,
+# prometheus and capi; an entry's own approval replaces it as a whole (no deep
+# merge: the override below drops every tool of the family default); an entry's
+# `approval: {}` renders none; an entry of a group muster.families does not list
+# renders none unless it sets one.
+mcpServers:
+  - cluster: cluster-a
+    group: kubernetes
+    url: http://mcp-kubernetes.mcp-kubernetes.svc:8080/mcp
+    auth:
+      mode: forward
+  - cluster: cluster-a
+    group: prometheus
+    url: http://mcp-prometheus.mcp-prometheus.svc:8080/mcp
+    auth:
+      mode: forward
+  - cluster: cluster-a
+    group: capi
+    url: http://mcp-capi.mcp-capi.svc:8080/mcp
+    auth:
+      mode: forward
+  - cluster: cluster-b
+    group: kubernetes
+    url: http://mcp-kubernetes.mcp-kubernetes.svc:8080/mcp
+    approval:
+      rule: Allow
+      tools:
+        delete: Block
+        exec: Ask
+    auth:
+      mode: forward
+  - cluster: cluster-c
+    group: kubernetes
+    url: http://mcp-kubernetes.mcp-kubernetes.svc:8080/mcp
+    approval: {}
+    auth:
+      mode: forward
+  - cluster: cluster-a
+    group: github
+    name: github
+    url: https://api.githubcopilot.com/mcp/
+    auth:
+      mode: none
+  - cluster: cluster-a
+    group: agent-manager
+    name: agent-manager
+    url: http://agent-manager.agent-platform.svc.cluster.local:8080/mcp
+    approval:
+      rule: Ask
+    auth:
+      mode: forward

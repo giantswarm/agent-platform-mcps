@@ -28,6 +28,10 @@
        the key, else its family's. Empty renders none. */}}
 {{- $displayName := include "mcp.familyText" (dict "entry" . "fam" $fam "name" $name "key" "displayName" "what" "display name" "want" "a name") }}
 {{- $description := include "mcp.familyText" (dict "entry" . "fam" $fam "name" $name "key" "description" "what" "description" "want" "a description") }}
+{{- /* The tool approval: the entry's when it sets the key (an entry's `{}`
+       renders none), else its family's. The entry wins as a whole, no deep
+       merge. Empty renders none. */}}
+{{- $approval := ternary .approval $fam.approval (hasKey . "approval") }}
 {{- /* Default audiences apply to token-propagating modes; others only if explicit. */}}
 {{- $audiences := $auth.audiences }}
 {{- if and (not $audiences) (or (eq $mode "forward") (eq $mode "exchange")) }}
@@ -67,6 +71,10 @@ spec:
   {{- end }}
   {{- with .toolPrefix }}
   toolPrefix: {{ . }}
+  {{- end }}
+  {{- with $approval }}
+  approval:
+    {{- toYaml . | nindent 4 }}
   {{- end }}
   auth:
     {{- if eq $mode "none" }}

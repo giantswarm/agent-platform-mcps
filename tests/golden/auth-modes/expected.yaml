@@ -24,6 +24,33 @@ spec:
   url: http://mcp-kubernetes.mcp-kubernetes.svc:8080/mcp
   description: "Resources, events and pod logs of a management cluster and the health of its workload clusters, read-only"
   timeout: 30
+  approval:
+    rule: Ask
+    tools:
+      api_resources: Allow
+      apply: Ask
+      can_i: Allow
+      capi_cluster_health: Allow
+      capi_get_cluster: Allow
+      capi_list_clusters: Allow
+      capi_resolve_cluster: Allow
+      cluster_health: Allow
+      context_get_current: Allow
+      context_list: Allow
+      context_use: Ask
+      create: Ask
+      delete: Ask
+      describe: Allow
+      exec: Ask
+      get: Allow
+      list: Allow
+      list_port_forward_sessions: Allow
+      logs: Allow
+      patch: Ask
+      port_forward: Ask
+      scale: Ask
+      stop_all_port_forward_sessions: Ask
+      stop_port_forward_session: Ask
   auth:
     type: oauth
     forwardToken: true
@@ -58,6 +85,28 @@ spec:
   url: https://mcp-prometheus-cluster-b.agent-platform.svc.cluster.local:8443/mcp
   description: "Metrics of a management cluster, read-only: PromQL queries, series and labels, alerts and rules, and the scrape targets"
   timeout: 30
+  approval:
+    rule: Ask
+    tools:
+      check_ready: Allow
+      execute_query: Allow
+      execute_range_query: Allow
+      find_series: Allow
+      get_alertmanager_alerts: Allow
+      get_alertmanagers: Allow
+      get_alerts: Allow
+      get_build_info: Allow
+      get_config: Allow
+      get_flags: Allow
+      get_metric_metadata: Allow
+      get_rules: Allow
+      get_runtime_info: Allow
+      get_targets: Allow
+      get_targets_metadata: Allow
+      get_tsdb_stats: Allow
+      list_label_names: Allow
+      list_label_values: Allow
+      query_exemplars: Allow
   auth:
     type: oauth
     forwardToken: false
@@ -154,6 +203,13 @@ spec:
   url: http://mcp-capi.mcp-capi.svc:8080/mcp
   description: "Workload clusters of a management cluster, read-only: their status and health, machines and node pools, on AWS, Azure, GCP and vSphere"
   timeout: 30
+  approval:
+    rule: Ask
+    tools:
+      capi_cluster_health: Allow
+      capi_get_cluster: Allow
+      capi_list_clusters: Allow
+      capi_resolve_cluster: Allow
   auth:
     type: oauth
     forwardToken: true
@@ -188,6 +244,28 @@ spec:
   url: https://mcp-prometheus-cluster-b.agent-platform.svc.cluster.local:8443/mcp
   description: "Metrics of a management cluster, read-only: PromQL queries, series and labels, alerts and rules, and the scrape targets"
   timeout: 30
+  approval:
+    rule: Ask
+    tools:
+      check_ready: Allow
+      execute_query: Allow
+      execute_range_query: Allow
+      find_series: Allow
+      get_alertmanager_alerts: Allow
+      get_alertmanagers: Allow
+      get_alerts: Allow
+      get_build_info: Allow
+      get_config: Allow
+      get_flags: Allow
+      get_metric_metadata: Allow
+      get_rules: Allow
+      get_runtime_info: Allow
+      get_targets: Allow
+      get_targets_metadata: Allow
+      get_tsdb_stats: Allow
+      list_label_names: Allow
+      list_label_values: Allow
+      query_exemplars: Allow
   auth:
     type: oauth
     forwardToken: false

@@ -24,6 +24,33 @@ spec:
   type: streamable-http
   url: http://mcp-kubernetes.mcp-kubernetes.svc:8080/mcp
   description: "Resources, events and pod logs of a management cluster and the health of its workload clusters, read-only"
+  approval:
+    rule: Ask
+    tools:
+      api_resources: Allow
+      apply: Ask
+      can_i: Allow
+      capi_cluster_health: Allow
+      capi_get_cluster: Allow
+      capi_list_clusters: Allow
+      capi_resolve_cluster: Allow
+      cluster_health: Allow
+      context_get_current: Allow
+      context_list: Allow
+      context_use: Ask
+      create: Ask
+      delete: Ask
+      describe: Allow
+      exec: Ask
+      get: Allow
+      list: Allow
+      list_port_forward_sessions: Allow
+      logs: Allow
+      patch: Ask
+      port_forward: Ask
+      scale: Ask
+      stop_all_port_forward_sessions: Ask
+      stop_port_forward_session: Ask
   auth:
     type: oauth
     forwardToken: true
