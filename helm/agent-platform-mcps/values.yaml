@@ -34,6 +34,12 @@ muster:
   # chart lets each entry choose its auth.mode. `approval` is the group's tool
   # approval, rendered as `spec.approval` on every server of the group;
   # `mcpServers[].approval` overrides it per entry as a whole (no deep merge).
+  # An entry's `approval` replaces its group's as a whole, tools and rule:
+  # `{rule: Allow, tools: {delete: Block}}` on an entry turns every other tool
+  # of that server to Allow. A group with no `approval` here, on a server whose
+  # entry sets none, renders none: that connector is unreviewed and runs every
+  # tool; on a governed platform only the servers agent-platform names are
+  # governed.
   families:
     kubernetes:
       instanceArg: management_cluster
@@ -43,20 +49,33 @@ muster:
       displayName: Kubernetes
       # -- Description of every kubernetes server.
       description: "Resources, events and pod logs of a management cluster and the health of its workload clusters, read-only"  # @schema maxLength: 500
-      # -- Tool approval of every kubernetes server (served by mcp-kubernetes), rendered as
-      # `spec.approval` on its MCPServer. The chart writes out every tool of this
-      # release explicitly (the "Recommended" preset: infrastructure servers whose
-      # reads run and whose writes ask a person; new tools ask until listed), so the
-      # connector arrives reviewed. `rule` is what a tool without its own entry
-      # gets, new tools included. Values: Allow | Ask | Block (Block hides the
-      # tool), `rule` Allow | Ask. An installation overrides per tool in its
-      # values; `null` renders none (`{}` does not: Helm merges it into this default) (the connector then runs every tool, shown as
-      # not reviewed). `mcpServers[].approval` replaces it as a whole, no merge.
+      # -- Tool approval of every kubernetes server (served by mcp-kubernetes),
+      # rendered as `spec.approval` on its MCPServer. The chart writes out every
+      # tool of this release explicitly (the "Recommended" preset:
+      # infrastructure servers whose reads run and whose writes ask a person;
+      # new tools ask until listed), so the connector arrives reviewed. `rule`
+      # is what a tool without its own entry gets, new tools included: Allow |
+      # Ask | Block (a Block rule hides and refuses every tool without its own
+      # entry, new ones included); a tool's own value is Allow | Ask | Block
+      # (Block hides the tool). An installation overrides per tool in its
+      # values; `null` renders none (`{}` does not: Helm merges it into this
+      # default; the connector then runs every tool, shown as not reviewed). The
+      # 24 entries below are the tools mcp-kubernetes registers under their
+      # primary names; the 15 deprecated `kubernetes_*` aliases it also
+      # registers are not listed and follow the rule (Ask). This map must stay
+      # equal to agent-platform's connectivity chart
+      # `mcp-kubernetes.mcpServer.approval` (agent-platform's test checks it).
+      # On a governed platform muster asks an agent caller before every tool of
+      # this server that is not on its safe list (rendered by agent-platform),
+      # whatever these settings say; muster's floors ask agents in both modes
+      # (none of these servers has one); on a trusted platform these settings
+      # apply. `mcpServers[].approval` replaces it as a whole, no merge: `{rule:
+      # Allow, tools: {delete: Block}}` there turns every other tool to Allow.
       # Needs a muster whose MCPServer CRD carries spec.approval (an older CRD
-      # drops the field).
-      # See https://docs.giantswarm.io/overview/agent-platform/governing-tool-calls/
+      # drops the field). See
+      # https://docs.giantswarm.io/overview/agent-platform/governing-tool-calls/
       approval:
-        rule: Ask  # @schema enum: [Allow, Ask]
+        rule: Ask  # @schema enum: [Allow, Ask, Block]
         # @schema maxProperties: 512; allOf: [{additionalProperties: {type: string, enum: [Allow, Ask, Block]}}]
         tools:
           get: Allow
@@ -91,20 +110,28 @@ muster:
       displayName: Prometheus
       # -- Description of every prometheus server.
       description: "Metrics of a management cluster, read-only: PromQL queries, series and labels, alerts and rules, and the scrape targets"  # @schema maxLength: 500
-      # -- Tool approval of every prometheus server (served by mcp-prometheus), rendered as
-      # `spec.approval` on its MCPServer. The chart writes out every tool of this
-      # release explicitly (the "Recommended" preset: infrastructure servers whose
-      # reads run and whose writes ask a person; new tools ask until listed), so the
-      # connector arrives reviewed. `rule` is what a tool without its own entry
-      # gets, new tools included. Values: Allow | Ask | Block (Block hides the
-      # tool), `rule` Allow | Ask. An installation overrides per tool in its
-      # values; `null` renders none (`{}` does not: Helm merges it into this default) (the connector then runs every tool, shown as
-      # not reviewed). `mcpServers[].approval` replaces it as a whole, no merge.
+      # -- Tool approval of every prometheus server (served by mcp-prometheus),
+      # rendered as `spec.approval` on its MCPServer. The chart writes out every
+      # tool of this release explicitly (the "Recommended" preset:
+      # infrastructure servers whose reads run and whose writes ask a person;
+      # new tools ask until listed), so the connector arrives reviewed. `rule`
+      # is what a tool without its own entry gets, new tools included: Allow |
+      # Ask | Block (a Block rule hides and refuses every tool without its own
+      # entry, new ones included); a tool's own value is Allow | Ask | Block
+      # (Block hides the tool). An installation overrides per tool in its
+      # values; `null` renders none (`{}` does not: Helm merges it into this
+      # default; the connector then runs every tool, shown as not reviewed). On
+      # a governed platform muster asks an agent caller before every tool of
+      # this server that is not on its safe list (rendered by agent-platform),
+      # whatever these settings say; muster's floors ask agents in both modes
+      # (none of these servers has one); on a trusted platform these settings
+      # apply. `mcpServers[].approval` replaces it as a whole, no merge: `{rule:
+      # Allow, tools: {delete: Block}}` there turns every other tool to Allow.
       # Needs a muster whose MCPServer CRD carries spec.approval (an older CRD
-      # drops the field).
-      # See https://docs.giantswarm.io/overview/agent-platform/governing-tool-calls/
+      # drops the field). See
+      # https://docs.giantswarm.io/overview/agent-platform/governing-tool-calls/
       approval:
-        rule: Ask  # @schema enum: [Allow, Ask]
+        rule: Ask  # @schema enum: [Allow, Ask, Block]
         # @schema maxProperties: 512; allOf: [{additionalProperties: {type: string, enum: [Allow, Ask, Block]}}]
         tools:
           execute_query: Allow
@@ -134,20 +161,28 @@ muster:
       displayName: Cluster API
       # -- Description of every capi server.
       description: "Workload clusters of a management cluster, read-only: their status and health, machines and node pools, on AWS, Azure, GCP and vSphere"  # @schema maxLength: 500
-      # -- Tool approval of every capi server (served by the CAPI tools of mcp-kubernetes' federation mode), rendered as
-      # `spec.approval` on its MCPServer. The chart writes out every tool of this
-      # release explicitly (the "Recommended" preset: infrastructure servers whose
-      # reads run and whose writes ask a person; new tools ask until listed), so the
-      # connector arrives reviewed. `rule` is what a tool without its own entry
-      # gets, new tools included. Values: Allow | Ask | Block (Block hides the
-      # tool), `rule` Allow | Ask. An installation overrides per tool in its
-      # values; `null` renders none (`{}` does not: Helm merges it into this default) (the connector then runs every tool, shown as
-      # not reviewed). `mcpServers[].approval` replaces it as a whole, no merge.
-      # Needs a muster whose MCPServer CRD carries spec.approval (an older CRD
-      # drops the field).
-      # See https://docs.giantswarm.io/overview/agent-platform/governing-tool-calls/
+      # -- Tool approval of every capi server (served by the CAPI tools of
+      # mcp-kubernetes' federation mode), rendered as `spec.approval` on its
+      # MCPServer. The chart writes out every tool of this release explicitly
+      # (the "Recommended" preset: infrastructure servers whose reads run and
+      # whose writes ask a person; new tools ask until listed), so the connector
+      # arrives reviewed. `rule` is what a tool without its own entry gets, new
+      # tools included: Allow | Ask | Block (a Block rule hides and refuses
+      # every tool without its own entry, new ones included); a tool's own value
+      # is Allow | Ask | Block (Block hides the tool). An installation overrides
+      # per tool in its values; `null` renders none (`{}` does not: Helm merges
+      # it into this default; the connector then runs every tool, shown as not
+      # reviewed). On a governed platform muster asks an agent caller before
+      # every tool of this server that is not on its safe list (rendered by
+      # agent-platform), whatever these settings say; muster's floors ask agents
+      # in both modes (none of these servers has one); on a trusted platform
+      # these settings apply. `mcpServers[].approval` replaces it as a whole, no
+      # merge: `{rule: Allow, tools: {delete: Block}}` there turns every other
+      # tool to Allow. Needs a muster whose MCPServer CRD carries spec.approval
+      # (an older CRD drops the field). See
+      # https://docs.giantswarm.io/overview/agent-platform/governing-tool-calls/
       approval:
-        rule: Ask  # @schema enum: [Allow, Ask]
+        rule: Ask  # @schema enum: [Allow, Ask, Block]
         # @schema maxProperties: 512; allOf: [{additionalProperties: {type: string, enum: [Allow, Ask, Block]}}]
         tools:
           capi_list_clusters: Allow
@@ -300,7 +335,7 @@ defaults:
 #       clientSecretKey: client-secret
 identityProviders: {}
 
-# @schema item: object; itemRequired: [cluster, group, url]; itemProperties: {cluster: {type: string}, group: {type: string}, url: {type: string}, name: {type: string}, namespace: {type: string}, transport: {type: string}, autoStart: {type: boolean}, keep: {type: boolean}, timeout: {type: integer}, toolPrefix: {type: string}, toolGroup: {type: string, enum: [agent-platform, infrastructure]}, displayName: {type: string}, description: {type: string, maxLength: 500}, approval: {type: object, additionalProperties: false, properties: {rule: {type: string, enum: [Allow, Ask]}, tools: {type: object, maxProperties: 512, additionalProperties: {type: string, enum: [Allow, Ask, Block]}}}}, auth: {type: object, properties: {mode: {type: string, enum: [none, oauth, forward, exchange]}, provider: {type: string}, audiences: {type: array, items: {type: string}}, authorizationServer: {type: object, required: [issuer], properties: {issuer: {type: string}, expectedIssuer: {type: string}, authorizationEndpoint: {type: string}, tokenEndpoint: {type: string}, scopes: {type: string}, clientCredentialsSecretRef: {type: object, required: [name], properties: {name: {type: string}, namespace: {type: string}, clientIdKey: {type: string}, clientSecretKey: {type: string}}}, grantScope: {type: string, enum: [session, subject]}}}}}}
+# @schema item: object; itemRequired: [cluster, group, url]; itemProperties: {cluster: {type: string}, group: {type: string}, url: {type: string}, name: {type: string}, namespace: {type: string}, transport: {type: string}, autoStart: {type: boolean}, keep: {type: boolean}, timeout: {type: integer}, toolPrefix: {type: string}, toolGroup: {type: string, enum: [agent-platform, infrastructure]}, displayName: {type: string}, description: {type: string, maxLength: 500}, approval: {type: object, additionalProperties: false, properties: {rule: {type: string, enum: [Allow, Ask, Block]}, tools: {type: object, maxProperties: 512, additionalProperties: {type: string, enum: [Allow, Ask, Block]}}}}, auth: {type: object, properties: {mode: {type: string, enum: [none, oauth, forward, exchange]}, provider: {type: string}, audiences: {type: array, items: {type: string}}, authorizationServer: {type: object, required: [issuer], properties: {issuer: {type: string}, expectedIssuer: {type: string}, authorizationEndpoint: {type: string}, tokenEndpoint: {type: string}, scopes: {type: string}, clientCredentialsSecretRef: {type: object, required: [name], properties: {name: {type: string}, namespace: {type: string}, clientIdKey: {type: string}, clientSecretKey: {type: string}}}, grantScope: {type: string, enum: [session, subject]}}}}}}
 # -- Flat list of MCP servers. Required fields per entry: cluster, group, url.
 # Optional: name (default <cluster>-mcp-<group>), namespace (default: the
 # release namespace), transport, autoStart, keep, timeout, toolPrefix,
@@ -336,7 +371,13 @@ identityProviders: {}
 # group's as a whole, tools included (no deep merge); an entry that sets
 # `approval: {}` renders none, whatever its group's; one that sets none and
 # whose group has none renders none either. Values as for
-# muster.families.<group>.approval.
+# muster.families.<group>.approval. Warning: the replacement is whole, so an
+# entry's `approval: {rule: Allow, tools: {delete: Block}}` turns every tool of
+# that server except delete to Allow, even where the group's rule is Ask;
+# restate the group's rule and tools in the entry. A server with no approval at
+# all (an unlisted group, or none on its entry) is unreviewed and runs every
+# tool; on a governed platform only the servers agent-platform names are
+# governed.
 #
 # auth.mode selects how muster authenticates to the server: none, oauth
 # (muster runs its own OAuth login against the server's authorization server
