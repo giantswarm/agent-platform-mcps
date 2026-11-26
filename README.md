@@ -101,7 +101,7 @@ agentgateway:
 identityProviders:
   cluster-b:
     tokenEndpoint: https://dex.cluster-b.example.com/token
-    connectorId: giantswarm-simple-oidc
+    connectorId: giantswarm-gazelle-oidc
     scopes: openid profile email groups
     credentialsSecret:
       name: cluster-b-token-exchange-credentials
