@@ -61,7 +61,7 @@ muster:
       # they apply. `mcpServers[].approval` replaces it as a whole: `{rule:
       # Allow, tools: {delete: Block}}` turns every other tool to Allow. Needs
       # a muster CRD with `spec.approval`. See
-      # https://docs.giantswarm.io/overview/agent-platform/governing-tool-calls/
+      # https://github.com/giantswarm/agent-platform/blob/main/docs/tool-approval.md
       approval:
         rule: Ask  # @schema enum: [Allow, Ask, Block]
         # @schema maxProperties: 512; allOf: [{additionalProperties: {type: string, enum: [Allow, Ask, Block]}}]
@@ -110,7 +110,7 @@ muster:
       # apply. `mcpServers[].approval` replaces it as a whole: `{rule: Allow,
       # tools: {delete: Block}}` turns every other tool to Allow. Needs a
       # muster CRD with `spec.approval`. See
-      # https://docs.giantswarm.io/overview/agent-platform/governing-tool-calls/
+      # https://github.com/giantswarm/agent-platform/blob/main/docs/tool-approval.md
       approval:
         rule: Ask  # @schema enum: [Allow, Ask, Block]
         # @schema maxProperties: 512; allOf: [{additionalProperties: {type: string, enum: [Allow, Ask, Block]}}]
@@ -154,7 +154,7 @@ muster:
       # platform they apply. `mcpServers[].approval` replaces it as a whole:
       # `{rule: Allow, tools: {delete: Block}}` turns every other tool to
       # Allow. Needs a muster CRD with `spec.approval`. See
-      # https://docs.giantswarm.io/overview/agent-platform/governing-tool-calls/
+      # https://github.com/giantswarm/agent-platform/blob/main/docs/tool-approval.md
       approval:
         rule: Ask  # @schema enum: [Allow, Ask, Block]
         # @schema maxProperties: 512; allOf: [{additionalProperties: {type: string, enum: [Allow, Ask, Block]}}]
