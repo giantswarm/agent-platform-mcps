@@ -300,7 +300,7 @@ defaults:
 #   cluster-b:
 #     tokenEndpoint: https://dex-cluster-b.agent-platform.svc.cluster.local:8443/token
 #     expectedIssuer: https://dex.cluster-b.example.com
-#     connectorId: giantswarm-simple-oidc
+#     connectorId: giantswarm-gazelle-oidc
 #     scopes: openid profile email groups
 #     credentialsSecret:
 #       name: cluster-b-token-exchange-credentials

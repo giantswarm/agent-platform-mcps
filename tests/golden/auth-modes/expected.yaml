@@ -114,7 +114,7 @@ spec:
       enabled: true
       dexTokenEndpoint: https://dex-cluster-b.agent-platform.svc.cluster.local:8443/token
       expectedIssuer: https://dex.cluster-b.example.com
-      connectorId: giantswarm-simple-oidc
+      connectorId: giantswarm-gazelle-oidc
       scopes: openid profile email groups
       clientCredentialsSecretRef:
         name: cluster-b-token-exchange-credentials
@@ -273,7 +273,7 @@ spec:
       enabled: true
       dexTokenEndpoint: https://dex-cluster-b.agent-platform.svc.cluster.local:8443/token
       expectedIssuer: https://dex.cluster-b.example.com
-      connectorId: giantswarm-simple-oidc
+      connectorId: giantswarm-gazelle-oidc
       scopes: openid profile email groups
       clientCredentialsSecretRef:
         name: cluster-b-token-exchange-credentials
