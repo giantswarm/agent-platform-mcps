@@ -254,7 +254,7 @@
         },
         "mcpServers": {
             "type": "array",
-            "description": "Flat list of MCP servers. Required fields per entry: cluster, group, url. Optional: name (default <cluster>-mcp-<group>), namespace (default: the release namespace), transport, autoStart, keep, timeout, toolPrefix, toolGroup, displayName, description, auth. The entry schema is closed: a key the chart does not read fails the values check instead of being dropped silently.  toolGroup overrides the tier the entry's group gets from muster.families (agent-platform or infrastructure), rendered as the label agent-platform.giantswarm.io/tool-group -- for example to file a server of an unlisted group under the Agent Platform tier. An entry whose group has no toolGroup and that sets none renders no tier label: it is a Registered server. Any other value fails the render.  displayName overrides the display name the entry's group gets from muster.families (for example to name a server of an unlisted group), rendered as the annotation ui.giantswarm.io/display-name. The Dev Portal shows a family under the display name its members agree on, so a family member rarely sets its own. An entry that sets displayName to \"\" renders no annotation, whatever its group's; one that sets none and whose group has none renders none either. A blank value (only whitespace) fails the render.  description overrides the description the entry's group gets from muster.families (for example to describe a server of an unlisted group), rendered as spec.description, at most 500 characters. The Dev Portal shows a family with the description of one of its members, so a family member that sets its own makes the family's description depend on the member shown: a family member rarely sets one. \"\" and blank values behave as for displayName.  auth.mode selects how muster authenticates to the server: none, oauth (muster runs its own OAuth login against the server's authorization server and holds the person's grant), forward (the caller's Dex token, same-cluster only) or exchange (RFC 8693 via identityProviders). For mode oauth, auth.authorizationServer pins an authorization server muster can neither discover nor register with (GitHub) -- rendered into spec.auth.authorizationServer as is; needs the muster chart >= 5.8.0, an older CRD prunes the pin silently. issuer is required; authorizationEndpoint and tokenEndpoint go together (both or neither, the CRD's rule); grantScope is session (default) or subject; clientCredentialsSecretRef.namespace defaults to the MCPServer's namespace. Keys other than these fail the render.  issuer is the identity the grant is filed under, so two OAuth clients of one authorization server hold two separate grants. expectedIssuer is the value muster compares the RFC 9207 `iss` of the authorization response against; it defaults to issuer. The two differ when a GitHub App is pinned under its own identity (https://github.com/apps/<slug>) while GitHub puts https://github.com/login/oauth in `iss`. Without expectedIssuer that sign-in is refused for an iss mismatch. Needs the muster chart >= 5.27.0.  Example entries: # Same-cluster server, the Dex token forwarded as-is. The backend # validates it against Dex's JWKS; muster is not an issuer. - cluster: graveler group: kubernetes url: https://mcp-kubernetes.graveler.example.com/mcp auth: mode: forward  # Remote cluster server, RFC 8693 token exchange via identityProviders: - cluster: gazelle group: kubernetes url: https://mcp-kubernetes.gazelle.example.com/mcp auth: mode: exchange provider: gazelle          # ref into identityProviders above  # Unauthenticated server: - cluster: graveler group: prometheus url: https://mcp-prometheus.graveler.example.com/mcp auth: mode: none  # Hosted server whose authorization server publishes no discovery document # and registers no clients (GitHub): pin it. muster identifies with the # pre-registered client from the Secret (keys client-id / client-secret) # and files the grant under the person, so one connect serves all of # their sessions. `name` keeps the server's name stable for consumers # that address it (the Dev Portal's plans.muster.server). - cluster: gazelle group: github name: github displayName: GitHub url: https://api.githubcopilot.com/mcp/ timeout: 120 toolPrefix: github auth: mode: oauth authorizationServer: issuer: https://github.com/login/oauth authorizationEndpoint: https://github.com/login/oauth/authorize tokenEndpoint: https://github.com/login/oauth/access_token scopes: \"repo read:org project\" clientCredentialsSecretRef: name: github-oauth-client namespace: agent-platform   # optional; defaults to the server's namespace grantScope: subject           # session (default) | subject",
+            "description": "Flat list of MCP servers. Required fields per entry: cluster, group, url. Optional: name (default <cluster>-mcp-<group>), namespace (default: the release namespace), transport, autoStart, keep, timeout, toolPrefix, toolGroup, displayName, description, approval, auth. The entry schema is closed: a key the chart does not read fails the values check instead of being dropped silently.  toolGroup overrides the tier the entry's group gets from muster.families (agent-platform or infrastructure), rendered as the label agent-platform.giantswarm.io/tool-group -- for example to file a server of an unlisted group under the Agent Platform tier. An entry whose group has no toolGroup and that sets none renders no tier label: it is a Registered server. Any other value fails the render.  displayName overrides the display name the entry's group gets from muster.families (for example to name a server of an unlisted group), rendered as the annotation ui.giantswarm.io/display-name. The Dev Portal shows a family under the display name its members agree on, so a family member rarely sets its own. An entry that sets displayName to \"\" renders no annotation, whatever its group's; one that sets none and whose group has none renders none either. A blank value (only whitespace) fails the render.  description overrides the description the entry's group gets from muster.families (for example to describe a server of an unlisted group), rendered as spec.description, at most 500 characters. The Dev Portal shows a family with the description of one of its members, so a family member that sets its own makes the family's description depend on the member shown: a family member rarely sets one. \"\" and blank values behave as for displayName.  approval overrides the tool approval the entry's group gets from muster.families, rendered as spec.approval; values as for muster.families.<group>.approval. The replacement is whole: an entry's `approval: {rule: Allow, tools: {delete: Block}}` turns every other tool of that server to Allow even where the group's rule is Ask, so restate the group's rule and tools. `approval: {}` renders none, whatever the group's. A server with no approval at all is unreviewed and runs every tool.  auth.mode selects how muster authenticates to the server: none, oauth (muster runs its own OAuth login against the server's authorization server and holds the person's grant), forward (the caller's Dex token, same-cluster only) or exchange (RFC 8693 via identityProviders). For mode oauth, auth.authorizationServer pins an authorization server muster can neither discover nor register with (GitHub) -- rendered into spec.auth.authorizationServer as is; needs the muster chart >= 5.8.0, an older CRD prunes the pin silently. issuer is required; authorizationEndpoint and tokenEndpoint go together (both or neither, the CRD's rule); grantScope is session (default) or subject; clientCredentialsSecretRef.namespace defaults to the MCPServer's namespace. Keys other than these fail the render.  issuer is the identity the grant is filed under, so two OAuth clients of one authorization server hold two separate grants. expectedIssuer is the value muster compares the RFC 9207 `iss` of the authorization response against; it defaults to issuer. The two differ when a GitHub App is pinned under its own identity (https://github.com/apps/<slug>) while GitHub puts https://github.com/login/oauth in `iss`. Without expectedIssuer that sign-in is refused for an iss mismatch. Needs the muster chart >= 5.27.0.  Example entries: # Same-cluster server, the Dex token forwarded as-is. The backend # validates it against Dex's JWKS; muster is not an issuer. - cluster: graveler group: kubernetes url: https://mcp-kubernetes.graveler.example.com/mcp auth: mode: forward  # Remote cluster server, RFC 8693 token exchange via identityProviders: - cluster: gazelle group: kubernetes url: https://mcp-kubernetes.gazelle.example.com/mcp auth: mode: exchange provider: gazelle          # ref into identityProviders above  # Unauthenticated server: - cluster: graveler group: prometheus url: https://mcp-prometheus.graveler.example.com/mcp auth: mode: none  # Hosted server whose authorization server publishes no discovery document # and registers no clients (GitHub): pin it. muster identifies with the # pre-registered client from the Secret (keys client-id / client-secret) # and files the grant under the person, so one connect serves all of # their sessions. `name` keeps the server's name stable for consumers # that address it (the Dev Portal's plans.muster.server). - cluster: gazelle group: github name: github displayName: GitHub url: https://api.githubcopilot.com/mcp/ timeout: 120 toolPrefix: github auth: mode: oauth authorizationServer: issuer: https://github.com/login/oauth authorizationEndpoint: https://github.com/login/oauth/authorize tokenEndpoint: https://github.com/login/oauth/access_token scopes: \"repo read:org project\" clientCredentialsSecretRef: name: github-oauth-client namespace: agent-platform   # optional; defaults to the server's namespace grantScope: subject           # session (default) | subject",
             "items": {
                 "type": "object",
                 "required": [
@@ -267,6 +267,32 @@
                     "description": {
                         "type": "string",
                         "maxLength": 500
+                    },
+                    "approval": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                            "rule": {
+                                "type": "string",
+                                "enum": [
+                                    "Allow",
+                                    "Ask",
+                                    "Block"
+                                ]
+                            },
+                            "tools": {
+                                "type": "object",
+                                "additionalProperties": {
+                                    "type": "string",
+                                    "enum": [
+                                        "Allow",
+                                        "Ask",
+                                        "Block"
+                                    ]
+                                },
+                                "maxProperties": 512
+                            }
+                        }
                     },
                     "auth": {
                         "type": "object",
@@ -398,7 +424,7 @@
                 },
                 "families": {
                     "type": "object",
-                    "description": "Groups that muster exposes as instance families. A server whose `group` is listed here gets a muster `family` block; unlisted groups are singletons. `toolGroup` is the group's tier on the Agent Platform, stamped as the label `agent-platform.giantswarm.io/tool-group` on every server of the group: `infrastructure` (the servers for the management clusters the platform runs on -- the chart default for kubernetes, prometheus and capi) or `agent-platform` (the platform's own management surface). A group without a `toolGroup` renders no tier label: its servers are Registered servers. `mcpServers[].toolGroup` overrides the group's tier per entry. `displayName` is the human-friendly name of the group's servers, stamped as the annotation `ui.giantswarm.io/display-name` on every server of the group; the Dev Portal shows it for the family. A group without a `displayName`, or with an empty one, renders no annotation; a blank one (only whitespace) fails the render. `mcpServers[].displayName` overrides it per entry. `description` says what the group's servers offer, rendered as `spec.description` on every server of the group; the Dev Portal shows it under the family's name, so it does not repeat the name. At most 500 characters, the CRD's limit. Empty and blank values behave as for `displayName`; `mcpServers[].description` overrides it per entry. The descriptions say what the servers offer, not how they authenticate: the chart lets each entry choose its auth.mode.",
+                    "description": "Groups that muster exposes as instance families. A server whose `group` is listed here gets a muster `family` block; unlisted groups are singletons. `toolGroup` is the group's tier on the Agent Platform, stamped as the label `agent-platform.giantswarm.io/tool-group` on every server of the group: `infrastructure` (the servers for the management clusters the platform runs on -- the chart default for kubernetes, prometheus and capi) or `agent-platform` (the platform's own management surface). A group without a `toolGroup` renders no tier label: its servers are Registered servers. `mcpServers[].toolGroup` overrides the group's tier per entry. `displayName` is the human-friendly name of the group's servers, stamped as the annotation `ui.giantswarm.io/display-name` on every server of the group; the Dev Portal shows it for the family. A group without a `displayName`, or with an empty one, renders no annotation; a blank one (only whitespace) fails the render. `mcpServers[].displayName` overrides it per entry. `description` says what the group's servers offer, rendered as `spec.description` on every server of the group; the Dev Portal shows it under the family's name, so it does not repeat the name. At most 500 characters, the CRD's limit. Empty and blank values behave as for `displayName`; `mcpServers[].description` overrides it per entry. The descriptions say what the servers offer, not how they authenticate: the chart lets each entry choose its auth.mode. `approval` is the group's tool approval, rendered as `spec.approval` on every server of the group; an entry's `approval` replaces it as a whole (tools and rule, no deep merge). A server with no approval renders none and is unreviewed: it runs every tool.",
                     "additionalProperties": false,
                     "properties": {
                         "capi": {
@@ -409,6 +435,51 @@
                                     "type": "string",
                                     "description": "Description of every capi server.",
                                     "maxLength": 500
+                                },
+                                "approval": {
+                                    "type": "object",
+                                    "description": "Tool approval of every capi server (served by the CAPI tools of mcp-kubernetes' federation mode), the MCPServer's `spec.approval`. The chart writes out every tool explicitly (the \"Recommended\" preset: reads run, writes ask a person; new tools ask until listed). `rule` is what a tool without its own entry gets: Allow | Ask | Block (Block hides and refuses). Override per tool in an installation's values; `null` renders none (`{}` does not: Helm merges it into the default). On a governed platform muster asks agent callers before every tool of this server not on its safe list, whatever these say; on a trusted platform they apply. `mcpServers[].approval` replaces it as a whole: `{rule: Allow, tools: {delete: Block}}` turns every other tool to Allow. Needs a muster CRD with `spec.approval`. See https://github.com/giantswarm/agent-platform/blob/main/docs/tool-approval.md",
+                                    "additionalProperties": false,
+                                    "properties": {
+                                        "rule": {
+                                            "type": "string",
+                                            "enum": [
+                                                "Allow",
+                                                "Ask",
+                                                "Block"
+                                            ]
+                                        },
+                                        "tools": {
+                                            "properties": {
+                                                "capi_cluster_health": {
+                                                    "type": "string"
+                                                },
+                                                "capi_get_cluster": {
+                                                    "type": "string"
+                                                },
+                                                "capi_list_clusters": {
+                                                    "type": "string"
+                                                },
+                                                "capi_resolve_cluster": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "allOf": [
+                                                {
+                                                    "additionalProperties": {
+                                                        "type": "string",
+                                                        "enum": [
+                                                            "Allow",
+                                                            "Ask",
+                                                            "Block"
+                                                        ]
+                                                    }
+                                                }
+                                            ],
+                                            "maxProperties": 512,
+                                            "unevaluatedProperties": false
+                                        }
+                                    }
                                 },
                                 "displayName": {
                                     "type": "string",
@@ -436,6 +507,111 @@
                                     "description": "Description of every kubernetes server.",
                                     "maxLength": 500
                                 },
+                                "approval": {
+                                    "type": "object",
+                                    "description": "Tool approval of every kubernetes server (served by mcp-kubernetes), the MCPServer's `spec.approval`. The chart writes out every tool explicitly (the \"Recommended\" preset: reads run, writes ask a person; new tools ask until listed). `rule` is what a tool without its own entry gets: Allow | Ask | Block (Block hides and refuses). Override per tool in an installation's values; `null` renders none (`{}` does not: Helm merges it into the default). The 24 entries are the tools mcp-kubernetes registers under their primary names; its 15 deprecated `kubernetes_*` aliases follow the rule (Ask). Keep the map equal to agent-platform's connectivity chart `mcp-kubernetes.mcpServer.approval` (its test checks it). On a governed platform muster asks agent callers before every tool of this server not on its safe list, whatever these say; on a trusted platform they apply. `mcpServers[].approval` replaces it as a whole: `{rule: Allow, tools: {delete: Block}}` turns every other tool to Allow. Needs a muster CRD with `spec.approval`. See https://github.com/giantswarm/agent-platform/blob/main/docs/tool-approval.md",
+                                    "additionalProperties": false,
+                                    "properties": {
+                                        "rule": {
+                                            "type": "string",
+                                            "enum": [
+                                                "Allow",
+                                                "Ask",
+                                                "Block"
+                                            ]
+                                        },
+                                        "tools": {
+                                            "properties": {
+                                                "api_resources": {
+                                                    "type": "string"
+                                                },
+                                                "apply": {
+                                                    "type": "string"
+                                                },
+                                                "can_i": {
+                                                    "type": "string"
+                                                },
+                                                "capi_cluster_health": {
+                                                    "type": "string"
+                                                },
+                                                "capi_get_cluster": {
+                                                    "type": "string"
+                                                },
+                                                "capi_list_clusters": {
+                                                    "type": "string"
+                                                },
+                                                "capi_resolve_cluster": {
+                                                    "type": "string"
+                                                },
+                                                "cluster_health": {
+                                                    "type": "string"
+                                                },
+                                                "context_get_current": {
+                                                    "type": "string"
+                                                },
+                                                "context_list": {
+                                                    "type": "string"
+                                                },
+                                                "context_use": {
+                                                    "type": "string"
+                                                },
+                                                "create": {
+                                                    "type": "string"
+                                                },
+                                                "delete": {
+                                                    "type": "string"
+                                                },
+                                                "describe": {
+                                                    "type": "string"
+                                                },
+                                                "exec": {
+                                                    "type": "string"
+                                                },
+                                                "get": {
+                                                    "type": "string"
+                                                },
+                                                "list": {
+                                                    "type": "string"
+                                                },
+                                                "list_port_forward_sessions": {
+                                                    "type": "string"
+                                                },
+                                                "logs": {
+                                                    "type": "string"
+                                                },
+                                                "patch": {
+                                                    "type": "string"
+                                                },
+                                                "port_forward": {
+                                                    "type": "string"
+                                                },
+                                                "scale": {
+                                                    "type": "string"
+                                                },
+                                                "stop_all_port_forward_sessions": {
+                                                    "type": "string"
+                                                },
+                                                "stop_port_forward_session": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "allOf": [
+                                                {
+                                                    "additionalProperties": {
+                                                        "type": "string",
+                                                        "enum": [
+                                                            "Allow",
+                                                            "Ask",
+                                                            "Block"
+                                                        ]
+                                                    }
+                                                }
+                                            ],
+                                            "maxProperties": 512,
+                                            "unevaluatedProperties": false
+                                        }
+                                    }
+                                },
                                 "displayName": {
                                     "type": "string",
                                     "description": "Display name of every kubernetes server."
@@ -461,6 +637,96 @@
                                     "type": "string",
                                     "description": "Description of every prometheus server.",
                                     "maxLength": 500
+                                },
+                                "approval": {
+                                    "type": "object",
+                                    "description": "Tool approval of every prometheus server (served by mcp-prometheus), the MCPServer's `spec.approval`. The chart writes out every tool explicitly (the \"Recommended\" preset: reads run, writes ask a person; new tools ask until listed). `rule` is what a tool without its own entry gets: Allow | Ask | Block (Block hides and refuses). Override per tool in an installation's values; `null` renders none (`{}` does not: Helm merges it into the default). On a governed platform muster asks agent callers before every tool of this server not on its safe list, whatever these say; on a trusted platform they apply. `mcpServers[].approval` replaces it as a whole: `{rule: Allow, tools: {delete: Block}}` turns every other tool to Allow. Needs a muster CRD with `spec.approval`. See https://github.com/giantswarm/agent-platform/blob/main/docs/tool-approval.md",
+                                    "additionalProperties": false,
+                                    "properties": {
+                                        "rule": {
+                                            "type": "string",
+                                            "enum": [
+                                                "Allow",
+                                                "Ask",
+                                                "Block"
+                                            ]
+                                        },
+                                        "tools": {
+                                            "properties": {
+                                                "check_ready": {
+                                                    "type": "string"
+                                                },
+                                                "execute_query": {
+                                                    "type": "string"
+                                                },
+                                                "execute_range_query": {
+                                                    "type": "string"
+                                                },
+                                                "find_series": {
+                                                    "type": "string"
+                                                },
+                                                "get_alertmanager_alerts": {
+                                                    "type": "string"
+                                                },
+                                                "get_alertmanagers": {
+                                                    "type": "string"
+                                                },
+                                                "get_alerts": {
+                                                    "type": "string"
+                                                },
+                                                "get_build_info": {
+                                                    "type": "string"
+                                                },
+                                                "get_config": {
+                                                    "type": "string"
+                                                },
+                                                "get_flags": {
+                                                    "type": "string"
+                                                },
+                                                "get_metric_metadata": {
+                                                    "type": "string"
+                                                },
+                                                "get_rules": {
+                                                    "type": "string"
+                                                },
+                                                "get_runtime_info": {
+                                                    "type": "string"
+                                                },
+                                                "get_targets": {
+                                                    "type": "string"
+                                                },
+                                                "get_targets_metadata": {
+                                                    "type": "string"
+                                                },
+                                                "get_tsdb_stats": {
+                                                    "type": "string"
+                                                },
+                                                "list_label_names": {
+                                                    "type": "string"
+                                                },
+                                                "list_label_values": {
+                                                    "type": "string"
+                                                },
+                                                "query_exemplars": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "allOf": [
+                                                {
+                                                    "additionalProperties": {
+                                                        "type": "string",
+                                                        "enum": [
+                                                            "Allow",
+                                                            "Ask",
+                                                            "Block"
+                                                        ]
+                                                    }
+                                                }
+                                            ],
+                                            "maxProperties": 512,
+                                            "unevaluatedProperties": false
+                                        }
+                                    }
                                 },
                                 "displayName": {
                                     "type": "string",
